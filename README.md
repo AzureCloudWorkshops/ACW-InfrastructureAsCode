@@ -16,7 +16,7 @@ You will need the following prerequisites to complete this walkthrough:
     - Terraform Extension
     - Azure Tools Extension
     - Optional: C# Extension
-- A GitHub Account (or other source control provider like ADO/BitBucket, but we're focusing on GitHub)[GitHub](https://github.com/signup?).
+- A GitHub Account (or other source control provider like ADO/BitBucket, but we're focusing on GitHub) [GitHub](https://github.com/signup?).
 - An Azure Subscription (you can use a free trial if you don't have one).
 - Azure CLI [latest version, minimum 2.50+](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
 - Terraform [version 1.6.6](https://developer.hashicorp.com/terraform/install?product_intent=terraform)
@@ -47,15 +47,17 @@ If you get stuck, refer to the GitHub documents for:
 
     ```bash
     dotnet new gitignore
-    ```
+    ```  
+
 1. Open the project in Visual Studio (or VS Code) 
 1. Modify the connection string to a local db of your choice
 1. Run two commands to update the database
     
-        ```bash
-        update-database -context ApplicationDbContext
-        update-database -context MyContactManagerDbContext
-        ```
+    ```bash
+    update-database -context ApplicationDbContext
+    update-database -context MyContactManagerDbContext
+    ```  
+    
     >**Note**: This code-base uses two different database contexts - one for identity and one for business logic.  For this reason, you'll need to migrate both contexts to your local database, and at azure (they can both use the same connection string as the database can be shared, or you could have your identity in one database and the business logic in another).
 
 1. Ensure that you can register a user and create a contact on your local machine.
