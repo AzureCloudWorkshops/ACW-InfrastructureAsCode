@@ -11,14 +11,23 @@ In each module, you'll build a piece of the overall architecture, and you will l
 
 You will need the following prerequisites to complete this walkthrough:
 
-- Visual Studio Code (IMHO, the best IDE for working with bicep and ARM templates, and possibly Terraform too).
-- Visual Studio Community or better (or JetBrains Rider) to be able to run the ASP.NET Core Web application locally (this could be optional - you could likely do this with VS Code as well).
-- .NET 6/7/8 SDK installed on your machine to develop .NET Core Web applications (for now the app is .NET 6, but will be upgraded to .NET 8 by the end of summer 2024 - feel free to upgrade to 8 at will, just make sure you have the SDK and that you can deploy to a .NET 8 app service in Azure).
-- Microsoft SQL Server Developer Edition (or Express) installed on your machine.
-- A GitHub Account (or other source control provider).
+- Visual Studio Code [v 1.85+](https://code.visualstudio.com/download) 
+    - Bicep Extension
+    - Terraform Extension
+    - Azure Tools Extension
+    - Optional: C# Extension
+- A GitHub Account (or other source control provider like ADO/BitBucket, but we're focusing on GitHub)[GitHub](https://github.com/signup?).
 - An Azure Subscription (you can use a free trial if you don't have one).
-- Basic Programming knowledge (ASP.Net MVC with C# is used in this walkthrough, but all the code changes are given to you so you don't really need to know how to develop solutions).
-- GIT (required) with optional GIT command line tools (can use the IDE like VSCode, GitKraken, or Visual Studio instead if you desire)
+- Azure CLI [latest version, minimum 2.50+](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
+- Terraform [version 1.6.6](https://developer.hashicorp.com/terraform/install?product_intent=terraform)
+- GIT (required) with optional GIT command line tools [GIT](https://git-scm.com/downloads)
+    - Could use a client like GitKraken or the tools in VSCode and/or Visual Studio
+- Optional: Visual Studio Community or better (or JetBrains Rider) to be able to run the ASP.NET Core Web application locally (this could be optional - you could likely do this with VS Code as well). The code is complete and the extra pieces can be uncommented when the time is right, so you don't actually need to run the app locally if you don't want to. [Visual Studio Downloads](https://visualstudio.microsoft.com/downloads/)  
+- Optional: .NET 6/7/8 SDK installed on your machine to develop .NET Core Web applications (for now the app is .NET 6, but will be upgraded to .NET 8 by the end of summer 2024 - feel free to upgrade to 8 at will, just make sure you have the SDK and that you can deploy to a .NET 8 app service in Azure). [Download .NET SDK](https://dotnet.microsoft.com/en-us/download/visual-studio-sdks)
+- Optional: Microsoft SQL Server Developer Edition (or Express) installed on your machine [SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads).
+- Optional: SSMS (SQL Server Management Studio) installed on your machine [SSMS](https://learn.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-ver16).  
+- Optional: - Basic Programming knowledge (ASP.Net MVC with C# is used in this walkthrough, but all the code changes are given to you so you don't really need to know how to develop solutions).
+
 
 ### Get the starter project into your GitHub repository
 
@@ -74,10 +83,14 @@ Complete the following module to learn about IaC and how to work with Bicep or T
 
 - [Introduction to IaC](Part1-IntroductionToIaC.md)
 
-
 ## Completion Check
 
-Before moving on, ensure that you have
+Before moving on, ensure that you have a full understanding of how to create a deployment using Bicep or Terraform.  You should be able to answer the following questions:
+- How do you work with parameters and variables?
+- Which type can be passed in from the command line/template file?
+- What is the purpose of outputs?
+- What is the purpose of modules? How do you utilize a module?
+- What is the purpose of scopes?  When would you use a scope? When would a scope be implicit?
 
 
 
