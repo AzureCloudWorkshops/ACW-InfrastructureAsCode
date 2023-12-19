@@ -43,7 +43,7 @@ If you get stuck, refer to the GitHub documents for:
 1. Create a local folder for your working directory, then initialize a repository in it - [or fork this repo, clone it to your working directory and skip to step 4]
 1. If you didn't fork, download the code from the '/src/StarterProject' folder of this repository.
 1. Unzip the code into a folder at the root of your local repository.  
-1. Add a .gitignore file
+1. Add a .gitignore file if one is not included
 
     ```bash
     dotnet new gitignore
@@ -61,7 +61,9 @@ If you get stuck, refer to the GitHub documents for:
     >**Note**: This code-base uses two different database contexts - one for identity and one for business logic.  For this reason, you'll need to migrate both contexts to your local database, and at azure (they can both use the same connection string as the database can be shared, or you could have your identity in one database and the business logic in another).
 
 1. Ensure that you can register a user and create a contact on your local machine.
-1. Commit any changes and push the changes to your remote repository if you have any pending changes.
+1. Commit any changes and push the changes to your remote repository if you have any pending changes.  
+
+You should now have a local repository with the code in place, and a remote repository with the code in place.
 
 #### Completion Check
 
@@ -70,8 +72,7 @@ Before proceeding, ensure that you can answer yes to the following questions:
 - Do you have a local repository with the code in place?
 - Does the application run on your local machine and work as expected to register a user and perform CRUD operations around contacts?
 
-
-## Introduction to IaC
+## Step 1: Introduction to IaC
 
 The first module gives you an introduction to IaC.  You'll learn about how to work with Bicep or Terraform to create a simple resource group and storage account.  You'll also learn about thigns like:
 
@@ -94,11 +95,40 @@ Before moving on, ensure that you have a full understanding of how to create a d
 - What is the purpose of modules? How do you utilize a module?
 - What is the purpose of scopes?  When would you use a scope? When would a scope be implicit?
 
-
-
 ![Resources](images/Part0-Prerequisites/image0001-resources.png)  
 
+## Step 2: Build the infrastructure
 
+In this step you will build the IaC that will provision the entire environment for the application.
+
+Complete the following module to learn about IaC and how to work with Bicep or Terraform.
+
+- [Introduction to IaC](Part2-BuildingTheInfrastructure.md)
+
+### Completion Check
+
+The following resources are needed to complete this walkthrough:
+- Resource Group
+- Log Analytics Workspace
+- Application Insights
+- App Service Plan
+- App Service
+- Azure SQL Server
+- Key Vault
+- Azure App Configuration [time permitting]
+
+
+## Step 3: Build CI/CD to deploy the application
+
+In this step you will build out the CI/CD pipeline to deploy the application to Azure.  You will use GitHub Actions to build the pipeline (or another pipeline/action from another source control provider).
+
+Complete the following module to learn about IaC and how to work with Bicep or Terraform.
+
+- [Part 3 - Implementing the CI/CD](Part3-ImplementingCICD.md)
+
+### Completion Check
+
+At the end of this step, you have a working deployment for any code changes, which deploy the application to your Azure environment.
 
 ## Conclusion
 
