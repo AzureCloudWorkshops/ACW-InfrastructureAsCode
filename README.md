@@ -95,8 +95,6 @@ Before moving on, ensure that you have a full understanding of how to create a d
 - What is the purpose of modules? How do you utilize a module?
 - What is the purpose of scopes?  When would you use a scope? When would a scope be implicit?
 
-![Resources](images/Part0-Prerequisites/image0001-resources.png)  
-
 ## Step 2: Build the infrastructure
 
 In this step you will build the IaC that will provision the entire environment for the application.
