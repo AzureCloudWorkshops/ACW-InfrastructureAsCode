@@ -82,9 +82,10 @@ The first module gives you an introduction to IaC.  You'll learn about how to wo
 - modules
 - scopes
 
-Complete the following module to learn about IaC and how to work with Bicep or Terraform.
+Complete one or both of the following modules to learn about IaC and how to work with Bicep or Terraform.
 
-- [Introduction to IaC](Part1-IntroductionToIaC.md)
+- [Introduction to IaC - Bicep](Part1-IntroductionToIaC_bicep.md)
+- [Introduction to IaC - Terraform](Part1-IntroductionToIaC_terraform.md)
 
 ## Completion Check
 
@@ -99,9 +100,10 @@ Before moving on, ensure that you have a full understanding of how to create a d
 
 In this step you will build the IaC that will provision the entire environment for the application.
 
-Complete the following module to learn about IaC and how to work with Bicep or Terraform.
+Complete one or both of the following modules to learn about IaC and how to work with Bicep or Terraform.
 
-- [Introduction to IaC](Part2-BuildingTheInfrastructure.md)
+- [Introduction to IaC - Bicep](Part2-BuildingTheInfrastructure_bicep.md)
+- [Introduction to IaC - Terraform](Part2-BuildingTheInfrastructure_terraform.md)
 
 ### Completion Check
 
@@ -120,7 +122,7 @@ The following resources are needed to complete this walkthrough:
 
 In this step you will build out the CI/CD pipeline to deploy the application to Azure.  You will use GitHub Actions to build the pipeline (or another pipeline/action from another source control provider).
 
-Complete the following module to learn about IaC and how to work with Bicep or Terraform.
+Complete one or both of the following modules to learn about IaC and how to deploy with GitHub.
 
 - [Part 3 - Implementing the CI/CD](Part3-ImplementingCICD.md)
 
