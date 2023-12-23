@@ -54,7 +54,7 @@ A good way to store this would be similar to the following:
 
 !["Initial repo with folder structure"](images/Part1-bicep/image0001-initialrepo.png)  
 
-###3 Step 1 - Create your file `storageAccount.bicep`
+### Step 1 - Create your file `storageAccount.bicep`
 
 For bicep, the file you create is a simple file that ends with the *.bicep extension. This can be done in a bash terminal, in VSCode, or in PowerShell. Assuming you can make your way to the correct place and/or make your way to VSCode, create a folder if you don't have one for `iac`.  In that folder, create a file `storageAccount.bicep`.
 
@@ -90,7 +90,7 @@ PowerShell:
 "" > "storageAccount.bicep"
 ```  
 
-#### Completion Check
+### Completion Check
 
 Before moving on, ensure that you have a file called `storageAccount.bicep` in a folder called `iac` at the root of your repository.
 
@@ -107,3 +107,111 @@ For this first activity, you'll be creating a simple storage account.  To do thi
 !["The VSCode Azure Tools Extension is shown"](images/Part1-bicep/image0004-azuretools.png)
 
 >**Note:** We may not need Azure Tools, but it's a good idea to have it in place for other things you will do in the future.
+
+
+...WIP..
+
+## Task 2 - Create a resource group
+
+You can create a resource group in the portal or via command line commands with the azure CLI. If you are struggling with the CLI, just pivot and go create a resource group in the portal (or switch to run the commands in the Azure Cloud Shell rather than from your local machine).
+
+Assuming that creating a resource group is straight forward in the portal, let's do it via the CLI.
+
+### Step 1 - Get Logged in
+
+...WIP...
+
+>**Note:** If you are using the Azure Cloud Shell, you can skip to step 3 and just use the cloud shell.
+
+### Step 2 - Ensure your subscription
+
+...WIP...
+
+### Step 3 - Create the resource group via CLI commands
+
+...WIP...
+
+### Completion Check
+
+You have a resource group named as you intended in your Azure subscription in the region of your choice.
+
+## Task 3 - Run the deployment
+
+...WIP...
+
+### Step 1 - Issue commands to run the deployment
+
+### Step 2 - Verify the deployment
+
+### Completion Check
+
+You have a storage account in your resource group that was named as you intended.
+
+## Task 4 - Use parameters
+
+In this part you'll create parameters for the storage account name and location.  You'll also learn how to use the parameters in your deployment.
+
+### Step 1 - Add parameters to the bicep file
+
+### Step 2 - Create a parameters file
+
+### Step 3 - Deploy via parameters file
+
+### Completion Check
+
+You have a file that you can reuse in multiple resource groups with various storage account names
+
+## Task 5 - Use variables and functions
+
+In this module you will learn to use variables and functions to create a unique string name for the storage account name
+
+### Step 1 - Create a variable for the storage account name
+
+### Step 2 - Use the variable in the storage account name
+
+### Step 3 - Add a unique string to the storage account name
+
+### Step 4 - Deploy via parameters file
+
+### Completion Check
+
+You can now deploy the same file to different resource groups multiple times and it will create a unique storage account name per group
+
+## Task 6 - Use modules and outputs
+
+In part 2, we will be doing an entire subscription deployment.  For that reason, let's learn about it quickly here before diving deeper in part 2.
+
+### Step 1 - Create an orchestrator file
+
+Use subscription level
+
+### Step 2 - Create a module for the storage account
+
+call the storage deployment at the subscription scope for the correct resource group
+
+### Step 3 - Create an output for the storage account 
+
+Examine the output of the deployment in the portal
+
+### Step 4 - Show how to leverage an output in another deployment
+
+Add another file to create a container in the storage account
+Deploy via a module
+Explain that this could easily be done in one file.  The reason for doing it this way is to show how to use outputs in other deployments.
+
+### Step 4 - Deploy via cli
+
+Deploy the subscription level deployment to Azure
+
+## Conclusion
+
+In this first part, you learned how to work with Bicep to create a simple storage account in a resource group.  You also learned about things like:
+- creating bicep files
+- running deployments from the command line
+- using parameters
+- using variables
+- using functions
+- using modules
+- using outputs
+
+
