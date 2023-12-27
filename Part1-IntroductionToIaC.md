@@ -43,40 +43,70 @@ However, in real deployments for your company, you'll likely see a deployment th
 
 In this first task, you will log in to Azure from the CLI.  This will allow you to run commands against your subscription.  You will need to have an Azure subscription to complete this task.  If you don't have an Azure subscription, you can create a free account [here](https://azure.microsoft.com/en-us/free/).  You will also need to make sure you have the Azure CLI installed.  You can find instructions on how to install the Azure CLI [here](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli).
 
-### Step 1 - Get Logged in
-
 To get started, you will need to have a terminal open to run the azure cli.  You can do this in Visual Studio Code terminal for Bash or PowerShell, or really any other terminal as long as you can run commands (even the windows command line should work).
+
+### Step 1 - Ensure Azure CLI  
 
 Begin by making sure you can run the Azure CLI.  You can do this by running the following command:
 
 ```bash
 az --version
 ```  
+>**Note:** if you do not see a current version of the Azure CLI as shown below, you will not be able to complete the next part of this task from your local machine.
 
-!["Checking the Azure CLI version"](images/Part1-common/image0001-azversion.png)
+!["Checking the Azure CLI version in both PowerShell and Bash"](images/Part1-common/image0001-azversion.png)
 
+### Step 2 - Log in to Azure
+
+Continuing on your local machine: 
 
 ```text  
 Enter the command az login
-```
+```  
 
-!["Logging into Azure"](images/Part1-terraform/azurelogin.png)  
+!["Logging into Azure"](images/Part1-common/image0002-azlogin.png)  
 
 A browser window will open, enter login credentials or select an account that you are already logged in to.
 
-!["Selecting an account in the browser"](images/Part1-terraform/azureloginselect.png)  
+!["Selecting an account in the browser"](images/Part1-common/image0003-azloginselectyouraccount.png)  
 
 A confirmation window will appear.
 
-!["Login confirmation"](images/Part1-terraform/azureloginconfirmation.png)  
-
->**Note:** If you are using the Azure Cloud Shell, you can skip to step 3 and just use the cloud shell.
-
-### Step 2 - Ensure your subscription
-
-
+!["Login confirmation"](images/Part1-common/image0004-azloginconfirmationdialog.png)  
 
 >**Note:** If you are having trouble getting logged in from your local machine, you can use the Azure Cloud Shell to complete the work in this training.  You can find instructions on how to use the Azure Cloud Shell [here](https://docs.microsoft.com/en-us/azure/cloud-shell/overview).  You will need to use the shell and run the commands as shown in these walkthroughs, but you will need to also ensure you have the files for your deployments created in the shell as well if you go this route.  Using the azure cloud shell will not be shown in the walkthroughs, so if you go this route you will need to figure out how to create the files in the shell and run the commands as shown in the walkthroughs.
+
+### Step 3 - Ensure your subscription
+
+Before doing any local deployments, it is a very good practice to make sure you are deploying to the correct subscription.  You can do this by running the following command:
+
+```bash
+az account show
+```  
+
+!["Making sure you are on the correct subscription with the az account show command"](images/Part1-common/image0005-azaccountshowoutput.png) 
+
+Review the output and determine that you are on the correct subscription.  You can see the name of the subscription and the subscription id.  Either can be used to set your subscription.  
+
+If you need to change your subscription, you can do so by running the following commands:
+
+```bash
+az account list -o table
+```  
+
+!["Listing the subscriptions with the az account list command"](images/Part1-common/image0006-azaccountlistoutput.png)  
+
+Then, using the subscription id or name, run the following command:
+
+```bash
+az account set --subscription <either-the-subscription-id or-name-goes-here>
+```  
+
+!["Setting the subscription with the az account set command"](images/Part1-common/image0007-azaccountsetandazaccountshow.png)
+
+Run the `az account show` command again to ensure you are on the correct subscription.
+
+Ensure you are on the correct subscription before continuing.
 
 ## Task 2 - Create a resource group
 
@@ -86,10 +116,63 @@ You can create a resource group in the portal or via command line commands with 
 
 Assuming that creating a resource group is straight forward in the portal, let's do it via the CLI for the purposes of learning.
 
+### Step 1 - Create variables
 
+To create a resource group, you will need to set the name and location for the group. You should choose a region that is close to you that also has redundancy to match your needs.  For this walkthrough, any region will suffice, so choose one that is close to you.  You can find a list of regions [here](https://azure.microsoft.com/en-us/global-infrastructure/regions/).  
 
+The name of the resource group should also make sense for the scope of your work.  For this, you are doing a simple deployment, so you can name it something like `iac-training-rg`.  You can name it whatever you want, but make sure it makes sense for the scope of your work and that you'll be confident you could delete the group later without fear of losing your work.
 
-## Task N: Complete the IaC activity with Bicep or Terraform
+Set variables to manage your group name and your location of choice (use either bash or powershell, not both):
+
+Bash:  
+
+```bash
+rg=iac-training-rg
+loc=eastus
+echo $rg
+echo $loc
+```  
+
+!["Setting the variables for the resource group name and location"](images/Part1-common/image0008-rgandlocvariables-bash.png)
+
+PowerShell:  
+
+```PowerShell
+$rg="iac-training-rg"
+$loc="eastus"
+echo $rg
+echo $loc
+```  
+
+!["Setting the variables for the resource group name and location"](images/Part1-common/image0008-rgandlocvariables-powershell.png)
+
+### Step 2 - Create the resource group
+
+With the variables in place, you can create and validate the existence of the resource group with the following commands:
+
+>**Note:** Only bash is shown below but the same commands work in PowerShell.
+
+```bash
+az group create -n $rg -l $loc
+```  
+
+!["Creating the resource group with the az group create command"](images/Part1-common/image0009-azgroupcreate.png)  
+
+```bash
+az group exists -n $rg
+```  
+
+!["Validating the resource group exists with the az group exists command"](images/Part1-common/image0010-azgroupexists.png)
+
+You can also validate in the portal:
+
+!["Validating the resource group exists in the portal"](images/Part1-common/image0011-azgroupexistsinportal.png)
+
+>**Note**: The name of your resource group will be whatever you name it, so don't be alarmed if you named it something different than what is shown or used any other region than eastus, as there are no restrictions on the name or location of the resource group for this walkthrough and any region with a resource group of any name will work.
+
+## Task 3: Complete the IaC activity with Bicep or Terraform
+
+Now that you have a resource group to deploy resources to, you can complete the IaC activity.  You can choose to complete the activity with Bicep or Terraform.
 
 Choose your path and complete the work using the tool of your choice.  You can do both if you want to, but you only need to do one to complete the training.
 
