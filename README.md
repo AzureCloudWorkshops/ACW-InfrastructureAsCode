@@ -28,7 +28,6 @@ You will need the following prerequisites to complete this walkthrough:
 - Optional: SSMS (SQL Server Management Studio) installed on your machine [SSMS](https://learn.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-ver16).  
 - Optional: - Basic Programming knowledge (ASP.Net MVC with C# is used in this walkthrough, but all the code changes are given to you so you don't really need to know how to develop solutions).
 
-
 ### Get the starter project into your GitHub repository
 
 You will need a GitHub repository to store the code and this will be used to set up CI/CD to Azure via GitHub Actions.  If you want to use another repository like Azure DevOps, BitBucket, or GitLab, you can do that as well, but the instructions in this walkthrough will only show how to create GitHub actions for the IaC and CI/CD deployments.
@@ -74,7 +73,7 @@ Before proceeding, ensure that you can answer yes to the following questions:
 
 ## Step 1: Introduction to IaC
 
-The first module gives you an introduction to IaC.  You'll learn about how to work with Bicep or Terraform to create a simple resource group and storage account.  You'll also learn about thigns like:
+The first module gives you an introduction to IaC.  You'll learn about how to work with Bicep or Terraform to create a simple resource group and storage account.  You'll also learn about things like:
 
 - parameters
 - variables
@@ -82,10 +81,7 @@ The first module gives you an introduction to IaC.  You'll learn about how to wo
 - modules
 - scopes
 
-Complete one or both of the following modules to learn about IaC and how to work with Bicep or Terraform.
-
-- [Introduction to IaC - Bicep](Part1-IntroductionToIaC_bicep.md)
-- [Introduction to IaC - Terraform](Part1-IntroductionToIaC_terraform.md)
+Complete the introductory module then choose one or both of the submodules for Bicep and/or Terraform to learn about IaC and how to work with Bicep or Terraform.  
 
 ## Completion Check
 
@@ -100,10 +96,9 @@ Before moving on, ensure that you have a full understanding of how to create a d
 
 In this step you will build the IaC that will provision the entire environment for the application.
 
-Complete one or both of the following modules to learn about IaC and how to work with Bicep or Terraform.
+Complete the introductory module then choose one or both of the submodules for Bicep and/or Terraform to learn about IaC and how to work with Bicep or Terraform.  
 
-- [Introduction to IaC - Bicep](Part2-BuildingTheInfrastructure_bicep.md)
-- [Introduction to IaC - Terraform](Part2-BuildingTheInfrastructure_terraform.md)
+- [Building the Infrastructure](Part2-BuildingTheInfrastructure.md)
 
 ### Completion Check
 
@@ -117,12 +112,9 @@ The following resources are needed to complete this walkthrough:
 - Key Vault
 - Azure App Configuration [time permitting]
 
-
 ## Step 3: Build CI/CD to deploy the application
 
-In this step you will build out the CI/CD pipeline to deploy the application to Azure.  You will use GitHub Actions to build the pipeline (or another pipeline/action from another source control provider).
-
-Complete one or both of the following modules to learn about IaC and how to deploy with GitHub.
+In this step you will build out the CI/CD pipeline to deploy the application to Azure.  You will use GitHub Actions to build the pipeline (or another pipeline/action from another source control provider).  This part will be the same regardless of which architecture you choose to use for the IaC. 
 
 - [Part 3 - Implementing the CI/CD](Part3-ImplementingCICD.md)
 
