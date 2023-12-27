@@ -277,27 +277,114 @@ With the new parameters file in place, modify the command and run the deployment
 az deployment group create --resource-group $rg --template-file storageAccount.bicep --parameters storageAccount.parameters.json
 ```  
 
-!["The bicep file and parameters file work together to deploy the resource into the resource group"](images/Part1-bicep/image0011-deploymentgroupcreatedwithparameters.png)
+!["The bicep file and parameters file work together to deploy the resource into the resource group"](images/Part1-bicep/image0011-bicepwithparametersrun.png)
 
 ### Completion Check
 
-You have a file that you can reuse in multiple resource groups with various storage account names (you would need to change the name in the parameter file at this point to ensure it is unique)
+You have a file that you can reuse in multiple resource groups with various storage account names (you would need to change the name in the parameter file at this point to ensure it is unique).
 
 ## Task 4 - Use variables and functions
 
 In this task you will learn to use variables and functions to create a unique string name for the storage account name
 
-### Step 1 - Create a variable for the storage account name
+### Step 1 - Modify the location to pull from the resource group location  
 
-### Step 2 - Use the variable in the storage account name
+There are a number of functions that are built-in with bicep that you can use.  Later in this task you'll use some string functions.  To get started, however, you'll use the `resourceGroup()` function to pull the location from the resource group.  To do this, modify the location parameter to the following:
 
-### Step 3 - Add a unique string to the storage account name
+```bicep
+param storageAccountName string
+param location string = resourceGroup().location
 
-### Step 4 - Deploy via parameters file
+//...
+```
+
+!["The bicep file with the updated resourceGroup().location function"](images/Part1-bicep/image0012-resourceGroupfunction.png)  
+
+Additional functions of interest are:
+- `subscription().subscriptionId` - returns the subscription id
+- `tenant().tenantId` - returns the tenant id
+- `resourceGroup().id` - returns the resource group id, plus you can do the `*.id` function with any resource (you'll learn more in the outputs later)
+
+### Step 2 - Parameterize your unique identifier  
+
+To make the unique identifier more flexible, you can parameterize it.  To do this, add a parameter for the unique identifier to the top of the file, and do not give it a default value.  For example:
+
+```bicep
+param storageAccountName string
+param location string = resourceGroup().location
+param uniqueIdentifier string
+
+//...
+```  
+
+Add the value to your parameters file (also remove it from the storage account name):
+
+```json
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "storageAccountName": {
+            "value": "mystorage"
+        },
+        "uniqueIdentifier": {
+            "value": "20291231acw"
+        }
+    }
+}
+```  
+
+With these two values separated, you can now utilize them appropriately in your deployment.
+
+### Step 3 - Create a variable for the storage account name
+
+There are a couple of possibilities on how you can combine parameters, but the easiest is to use a variable.  To do this, add the following variable to the top of the file (typically, I like to put my variables after any parameters just for readability):
+
+```bicep
+param storageAccountName string
+param location string = resourceGroup().location
+param uniqueIdentifier string
+
+var storageAccountNameFull = '${storageAccountName}${uniqueIdentifier}'
+
+//...
+```    
+
+Next, make sure to update the `name` value in the `storageaccount` resource to use the new variable:
+
+```bicep
+param storageAccountName string
+param location string = resourceGroup().location
+param uniqueIdentifier string
+
+var storageAccountNameFull = '${storageAccountName}${uniqueIdentifier}'
+
+resource storageaccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
+  name: storageAccountNameFull
+  location: location
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
+}
+```
+
+To ensure that everything is still working as expected, this would be a great time to redeploy the file:
+
+```bash  
+az deployment group create --resource-group $rg --template-file storageAccount.bicep --parameters storageAccount.parameters.json
+```  
+
+
+### Step 4 - Add a unique string to the storage account name
+
+### Step 5 - Use decorators to ensure storage account name is unique and is long enough
+
+### Step 6 - Deploy via parameters file, using the functions and variables added above
 
 ### Completion Check
 
-You can now deploy the same file to different resource groups multiple times and it will create a unique storage account name per group
+You can now deploy the same file to different resource groups multiple times and it will create a unique storage account name per group without changing the name of the storage account.  While we are not doing this in this activity, you could do so on your own for practice if you would like (you'll need another resource group to deploy to).  
 
 ## Task 5 - Use modules and outputs
 
