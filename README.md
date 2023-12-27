@@ -100,7 +100,7 @@ In this step you will build the IaC that will provision the entire environment f
 
 Complete the introductory module then choose one or both of the submodules for Bicep and/or Terraform to learn about IaC and how to work with Bicep or Terraform.  
 
-- [Building the Infrastructure](Part2-BuildingTheInfrastructure.md)
+- [Part 2 - Building the Infrastructure](Part2-BuildingTheInfrastructure.md)
 
 ### Completion Check
 
