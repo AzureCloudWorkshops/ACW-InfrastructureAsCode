@@ -103,12 +103,12 @@ Next, you need to add the code to create the storage account via bicep.
 
     ```bicep
     resource storageaccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
-    name: 'name'
-    location: location
-    kind: 'StorageV2'
-    sku: {
+      name: 'name'
+      location: location
+      kind: 'StorageV2'
+      sku: {
         name: 'Premium_LRS'
-    }
+      }
     }
     ```  
 
@@ -126,12 +126,12 @@ Second, the location needs to be set to the location of the resource group.  Thi
 
     ```bicep
     resource storageaccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
-    name: 'mystorageYYYYMMDDabc'
-    location: 'eastus'
-    kind: 'StorageV2'
-    sku: {
+      name: 'mystorageYYYYMMDDabc'
+      location: 'eastus'
+      kind: 'StorageV2'
+      sku: {
         name: 'Standard_LRS'
-    }
+      }
     }
     ```
 
@@ -220,12 +220,12 @@ To keep this simple, you will be parameterizing only the name and location of th
     param location string = 'eastus'
 
     resource storageaccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
-    name: storageAccountName
-    location: location
-    kind: 'StorageV2'
-    sku: {
+      name: storageAccountName
+      location: location
+      kind: 'StorageV2'
+      sku: {
         name: 'Standard_LRS'
-    }
+      }
     }
     ```
 
@@ -271,12 +271,12 @@ To ensure the file is used, remove the default value for the storage account nam
     param location string = 'eastus'
 
     resource storageaccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
-    name: storageAccountName
-    location: location
-    kind: 'StorageV2'
-    sku: {
+      name: storageAccountName
+      location: location
+      kind: 'StorageV2'
+      sku: {
         name: 'Standard_LRS'
-    }
+      }
     }
     ```  
 
@@ -377,12 +377,12 @@ There are a couple of possibilities on how you can combine parameters, but the e
     var storageAccountNameFull = '${storageAccountName}${uniqueIdentifier}'
 
     resource storageaccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
-    name: storageAccountNameFull
-    location: location
-    kind: 'StorageV2'
-    sku: {
+      name: storageAccountNameFull
+      location: location
+      kind: 'StorageV2'
+      sku: {
         name: 'Standard_LRS'
-    }
+      }
     }
     ```
 
@@ -414,12 +414,12 @@ uniqueString(resourceGroup().id)
     var storageAccountNameFull = '${storageAccountName}${uniqueIdentifier}${uniqueString(resourceGroup().id)})}'
 
     resource storageaccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
-    name: storageAccountNameFull
-    location: location
-    kind: 'StorageV2'
-    sku: {
+      name: storageAccountNameFull
+      location: location
+      kind: 'StorageV2'
+      sku: {
         name: 'Standard_LRS'
-    }
+      }
     }
     ```  
 
@@ -457,12 +457,12 @@ uniqueString(resourceGroup().id)
     var storageAccountNameFull = substring('${storageAccountName}${uniqueIdentifier}${uniqueString(resourceGroup().id)})}', 0, 24)
 
     resource storageaccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
-    name: storageAccountNameFull
-    location: location
-    kind: 'StorageV2'
-    sku: {
+      name: storageAccountNameFull
+      location: location
+      kind: 'StorageV2'
+      sku: {
         name: 'Standard_LRS'
-    }
+      }
     }
     ```  
 
@@ -529,10 +529,10 @@ As mentioned above, everything is great when the string for the storage account 
 
     ```bicep
     @allowed([
-    'eastus'
-    'eastus2'
-    'westus'
-    'westus2'
+      'eastus'
+      'eastus2'
+      'westus'
+      'westus2'
     ])
     param location string 
     ```  
@@ -551,20 +551,20 @@ As mentioned above, everything is great when the string for the storage account 
     @minLength(3)
     @maxLength(4)
     @allowed([
-    'dev'
-    'prod'
+      'dev'
+      'prod'
     ])
     param environment string = 'dev'
 
     var storageAccountNameFull = substring('${storageAccountName}${uniqueIdentifier}${environment}${uniqueString(resourceGroup().id)})}', 0, 24)
 
     resource storageaccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
-    name: storageAccountNameFull
-    location: location
-    kind: 'StorageV2'
-    sku: {
+      name: storageAccountNameFull
+      location: location
+      kind: 'StorageV2'
+      sku: {
         name: 'Standard_LRS'
-    }
+      }
     }
     ```  
 
@@ -610,7 +610,7 @@ As mentioned above, everything is great when the string for the storage account 
 
     !["Failure due to invalid parameter"](images/Part1-bicep/image0019-uatisnotallowed.png)
 
->**Note:** The final files generated to this point can be found in the parent repository under the `src/iac/bicep/storagePart1` folder.  You will need them in the next part of the activity, so if yours are not working, make sure to leverage the source to see where you may have gone wrong.
+>**Note:** The final files generated to this point can be found in the parent repository under the `src/iac/bicep/storagePart1` folder (the files with `_rgLevel` are what you should have at this point).  You will need working files in the next part of the activity, so if yours are not working, make sure to leverage the source to see where you may have gone wrong.  The final files from this module are also in the `storagePart1` folder but they contain all the changes about to be made for the next steps.
 
 ### Completion Check
 
@@ -691,9 +691,9 @@ For this part of the deployment, we'll start using a subscription-level deployme
 
 1. Run the command to do a subscription-level deployment.
 
-    ```bash
+    ```bash  
     az deployment sub create --location $loc --template-file deployAll.bicep --parameters deployAll.parameters.json
-    ```  
+    ```    
     
     You should see the resource group created in the portal, or at least still existing assuming you already had the resource group.
     
@@ -780,8 +780,8 @@ In this next step, you'll see how to create a module that runs an existing bicep
     @minLength(3)
     @maxLength(4)
     @allowed([
-    'dev'
-    'prod'
+      'dev'
+      'prod'
     ])
     param deploymentEnvironment string = 'dev'
 
@@ -969,8 +969,8 @@ In this last step you'll learn how to reference an existing resource.
     @minLength(3)
     @maxLength(4)
     @allowed([
-    'dev'
-    'prod'
+      'dev'
+      'prod'
     ])
     param deploymentEnvironment string
     param containerName string
