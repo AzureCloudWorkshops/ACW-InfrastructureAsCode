@@ -43,15 +43,50 @@ However, in real deployments for your company, you'll likely see a deployment th
 
 In this first task, you will log in to Azure from the CLI.  This will allow you to run commands against your subscription.  You will need to have an Azure subscription to complete this task.  If you don't have an Azure subscription, you can create a free account [here](https://azure.microsoft.com/en-us/free/).  You will also need to make sure you have the Azure CLI installed.  You can find instructions on how to install the Azure CLI [here](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli).
 
-...more to come...
+### Step 1 - Get Logged in
+
+To get started, you will need to have a terminal open to run the azure cli.  You can do this in Visual Studio Code terminal for Bash or PowerShell, or really any other terminal as long as you can run commands (even the windows command line should work).
+
+Begin by making sure you can run the Azure CLI.  You can do this by running the following command:
+
+```bash
+az --version
+```  
+
+!["Checking the Azure CLI version"](images/Part1-common/image0001-azversion.png)
+
+
+```text  
+Enter the command az login
+```
+
+!["Logging into Azure"](images/Part1-terraform/azurelogin.png)  
+
+A browser window will open, enter login credentials or select an account that you are already logged in to.
+
+!["Selecting an account in the browser"](images/Part1-terraform/azureloginselect.png)  
+
+A confirmation window will appear.
+
+!["Login confirmation"](images/Part1-terraform/azureloginconfirmation.png)  
+
+>**Note:** If you are using the Azure Cloud Shell, you can skip to step 3 and just use the cloud shell.
+
+### Step 2 - Ensure your subscription
+
+
 
 >**Note:** If you are having trouble getting logged in from your local machine, you can use the Azure Cloud Shell to complete the work in this training.  You can find instructions on how to use the Azure Cloud Shell [here](https://docs.microsoft.com/en-us/azure/cloud-shell/overview).  You will need to use the shell and run the commands as shown in these walkthroughs, but you will need to also ensure you have the files for your deployments created in the shell as well if you go this route.  Using the azure cloud shell will not be shown in the walkthroughs, so if you go this route you will need to figure out how to create the files in the shell and run the commands as shown in the walkthroughs.
 
-## Task 2: Create a resource group
+## Task 2 - Create a resource group
 
 In this second task, you'll use the Azure CLI to create a resource group.  You'll need to have an Azure subscription and you'll need to be logged in to Azure from the CLI.  If you haven't completed the first task, please do so before continuing.  
 
-...more to come...
+You can create a resource group in the portal or via command line commands with the azure CLI. If you are struggling with the CLI, just pivot and go create a resource group in the portal (or switch to run the commands in the Azure Cloud Shell rather than from your local machine).
+
+Assuming that creating a resource group is straight forward in the portal, let's do it via the CLI for the purposes of learning.
+
+
 
 
 ## Task N: Complete the IaC activity with Bicep or Terraform
