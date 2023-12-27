@@ -83,6 +83,8 @@ The first module gives you an introduction to IaC.  You'll learn about how to wo
 
 Complete the introductory module then choose one or both of the submodules for Bicep and/or Terraform to learn about IaC and how to work with Bicep or Terraform.  
 
+- [Part 1 - Introduction to IaC](Part1-IntroductionToIaC.md)
+
 ## Completion Check
 
 Before moving on, ensure that you have a full understanding of how to create a deployment using Bicep or Terraform.  You should be able to answer the following questions:
