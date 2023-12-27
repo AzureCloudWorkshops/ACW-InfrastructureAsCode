@@ -896,21 +896,133 @@ Now that the storage account and resource group can be run from the subscription
 
 ### Step 4 - Show how to leverage an output in another deployment
 
-Add another file to create a container in the storage account
-Deploy via a module
-Explain that this could easily be done in one file.  The reason for doing it this way is to show how to use outputs in other deployments.
+To complete this first part, the final thing we need to cover is leveraging the outputs from the previous module in the next modules.  To do this, we will create a new module that will create a container in the storage account.
 
-### Step 5 - Deploy via cli
+>**Note**: Again, I can't stress this enough but you would not do this in the real world.  In the real world you would put your container along with the storage account in most scenarios.  This is contrived for learning purposes and you'll get a chance to do more advanced things in part 2 which will require this concept to be completed successfully (i.e. KeyVault Secrets in an App Service and Managed Identities in KeyVault policies).
 
-Deploy the subscription level deployment to Azure
+In this last step you'll learn how to reference an existing resource.
+
+1. Create the `storageAccountContainer.bicep` file.  
+
+    >**Note:** You will not need a parameters file for this one since you'll just leverage it from the top-down but you could create one if you thought you might deploy just this module at some point.
+
+    ```bicep
+    param storageAccountFullName string
+    @minLength(3)
+    @maxLength(63)
+    param containerName string
+    param allowBlobPublicAccess bool = false
+
+    resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' existing = {
+      name: storageAccountFullName
+    }
+
+    resource blobServices 'Microsoft.Storage/storageAccounts/blobServices@2021-04-01' = {
+      parent: storageAccount
+      name: 'default'
+      properties: {
+        deleteRetentionPolicy: {
+        enabled: false
+        days: 7
+        }
+      }
+    }
+
+    resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+      name: containerName
+      parent: blobServices
+      properties: {
+        metadata: {}
+        publicAccess: 'None'
+      }
+    }
+    ```    
+
+    Note that this file relies on first getting the existing storage account with the keyword `existing`.  Next, the blob services is added to that existing resource, with the `parent` set so that the service knows where to be attached.  Finally, the blob container is created using the parent `blobServices` resource.  Because they all have parents, there is no concern about dependency conflicts in this file.
+
+1. Add a call to the file as a module in the `deployAll.bicep` file
+
+    ```bicep
+    module iacTrainingModuleStorageContainer 'storageAccountContainer.bicep' = {
+      name: 'iacTrainingStorageContainer-${containerName}'
+      scope: iacTrainingResourceGroup
+      params: {
+        storageAccountFullName: iacTrainingModuleStorage.outputs.storageAccountName
+        containerName: containerName
+      }
+    }
+    ```  
+
+1. Add the `containerName` parameter to the `deployAll.bicep` file.
+
+    ```bicep
+    targetScope = 'subscription'
+
+    param rgName string
+    param location string
+
+    @minLength(3)
+    param storageAccountName string
+    @minLength(11)
+    @maxLength(11)
+    param uniqueIdentifier string
+    @minLength(3)
+    @maxLength(4)
+    @allowed([
+    'dev'
+    'prod'
+    ])
+    param deploymentEnvironment string
+    param containerName string
+    ```  
+
+1. Add the value for the container name to the `deployAll.parameters.json` file.
+
+    ```json
+    {
+        "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+        "contentVersion": "1.0.0.0",
+        "parameters": {
+            "rgName": {
+                "value": "iac-training-rg"
+            },
+            "location": {
+                "value": "eastus"
+            },
+            "storageAccountName": {
+                "value": "mystorage"
+            },
+            "uniqueIdentifier": {
+                "value": "20291231acw"
+            },
+            "deploymentEnvironment": {
+                "value": "dev"
+            },
+            "containerName": {
+                "value": "iac-training-storage-container"
+            }
+        }
+    }
+    ```  
+    
+1. Deploy the subscription-level deployment and validate that the container is created.
+
+    Make sure all files are saved, then use the "up" arrow to re-deploy your subscription-level deployment.
+
+    !["The container is created as expected, and the deployment is now completed for this part"](images/Part1-bicep/image0029-containerCreatedAndEverythingIsWorking.png)  
+
+## Completion Check
+
+At this point you have learned most of the basic things you will need to work with Bicep for subscription-level infrastructure deployments.  Make sure that you have the following created successfully and that you can re-run your deployments at will.  Can you feel the peace of knowing you can't screw up the architecture now?  You can just re-run the deployment and it will fix itself.  This is one of the powerful things about IAC.
 
 ## Conclusion
 
 In this first part, you learned how to work with Bicep to create a simple storage account in a resource group.  You also learned about things like:
 - creating bicep files
-- running deployments from the command line
+- running deployments from the command line for resource group and subscription-level deployments
 - using parameters
 - using variables
 - using functions
 - using modules
-- using outputs
+- getting existing resources for use in your deployment
+- creating and leveraging outputs
