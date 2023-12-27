@@ -176,6 +176,8 @@ Now that you have a resource group to deploy resources to, you can complete the 
 
 Choose your path and complete the work using the tool of your choice.  You can do both if you want to, but you only need to do one to complete the training.
 
+>**Important**: There will be requirements for a unique name. When this happens, use the YYYYMMDD of today along with your initials.  For example, if today is 2025-08-15 and your initials are `acw`, your unique identfier would be `20250815acw`.  Append your unique identifier to the end of variables like the storage account name.  This will ensure that you don't have naming conflicts with other people in the workshop.  For example, if the storage account is named `mystorage` then your actual storage account name should be `mystorage20250815acw`.
+
 [Part 1 - Introduction to IaC - Bicep](Part1_IntroductionToIaC_bicep.md)  
 
 [Part 1 - Introduction to IaC - Terraform](Part1_IntroductionToIaC_terraform.md)  
