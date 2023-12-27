@@ -646,8 +646,8 @@ For this part of the deployment, we'll start using a subscription-level deployme
     targetScope = 'subscription'
 
     resource iacTrainingResourceGroup 'Microsoft.Resources/resourceGroups@2018-05-01' = {
-    name: 'myResourceGroup'
-    location: 'eastus'
+      name: 'myResourceGroup'
+      location: 'eastus'
     }
     ```  
 
@@ -660,8 +660,8 @@ For this part of the deployment, we'll start using a subscription-level deployme
     param location string
 
     resource iacTrainingResourceGroup 'Microsoft.Resources/resourceGroups@2018-05-01' = {
-    name: rgName
-    location: location
+      name: rgName
+      location: location
     }
     ```  
 
@@ -685,23 +685,214 @@ For this part of the deployment, we'll start using a subscription-level deployme
     >**Note:** again it's important to call out that the *.bicep template type would work locally but with a GitHub action you'll need to use the *.json parameters file, so that's why I recommend just using JSON files for now for parameters.
 
 
-1. Deploy the file to your subscription.  
+1. Ensure you are logged in and have set the location.  
 
-    
+    In order to deploy, you'll need a location variable only this time.  Ensure you are logged in and that you have the location in a variable `$loc` as in previous steps.  
+
+1. Run the command to do a subscription-level deployment.
+
+    ```bash
+    az deployment sub create --location $loc --template-file deployAll.bicep --parameters deployAll.parameters.json
+    ```  
     
     You should see the resource group created in the portal, or at least still existing assuming you already had the resource group.
+    
+    >**Note:** If you have done previous deployments with a file named `DeployAll.bicep` that are not the same as this file, you may see an error similar to the following:
+
+    !["DeployAll already exists"](images/Part1-bicep/image0021-errorDeployAll.png)   
+
+1. Name the deployment.
+
+    Most everyone probably succeeded on the first step, but my deployment failed. This is because the name of the deployment was not unique and it broke on my subscription.  For this reason, let's explicitly name our deployments.  This will be helpful and important when it is time to troubleshoot deployments in the future.
+
+    Run the deployment by creating a variable and running the command as follows:  
+
+    ```bash
+    deploymentName='introToIacPart1'
+    az deployment sub create --name $deploymentName --location $loc --template-file deployAll.bicep --parameters deployAll.parameters.json  
+    ```
+
+    !["Deploy using a specific deployment name"](images/Part1-bicep/image0022-deploymentByName.png)  
+
+    This will force the deployment to be named differently than the file name (which is the default name of the deployment when a name is not specified).  
+
+1. Review your deployments in the portal.
+
+    You can then review your deployments in the portal under your subscription (note that you may have others here as well, and you may not see deployAll if you deleted it or didn't run the first part, and you likely don't have conflicts if you are on a new subscription):
+
+    !["The deployment is shown in the portal"](images/Part1-bicep/image0023-deploymentsInThePortal.png)  
+    
+    You can drill into the deployment to see what all was deployed (useful when you have multiple deployments in a single file as we will do in part 2)
+
+    !["Drill in to see more information about the deployment"](images/Part1-bicep/image0024-deploymentOfRGdrillin.png) 
 
 
+1. Validate resources were not harmed in the deployment.
 
+    Validate that your resource group exists and that you didn't delete any of the existing storage accounts with this deployment even though it "re-created" the resource group (it's incremental so it just made sure the group existed as per the template).   
 
+    !["The resource group and storage accounts are shown in the portal, nothing was deleted"](images/Part1-bicep/image0025-allresourcesstillpresent.png)  
 
 ### Step 2 - Create a module for the storage account
 
-call the storage deployment at the subscription scope for the correct resource group
+In this next step, you'll see how to create a module that runs an existing bicep file - the one that you already know works from the previous steps to create your storage account.
+
+
+1. Add the module to create the storage account.
+
+    In the `deployAll.bicep` file, add the following module to the bottom of the file:
+
+    ```bicep
+    module iacTrainingModuleStorage 'storageAccount.bicep' = {
+      name: 'iacTrainingStorage'
+      scope: iacTrainingResourceGroup
+      params: {
+        storageAccountName: storageAccountName
+        uniqueIdentifier: uniqueIdentifier
+        environment: deploymentEnvironment
+        location: iacTrainingResourceGroup.location
+      }
+    }
+    ```
+
+    You need to note a couple of things here.
+    - The name of the module is `iacTrainingModuleStorage` and the file is `storageAccount.bicep`.  You can name this module whatever you want to name it but you must correctly leverage the bicep file to deploy by path.  Since the files are in the same folder, you can call the file directly.  
+    - The `scope` is the resource group that was created in the previous step.  This is important because the storage account must be created in the resource group (and this is a subscription-level deployment).  If you do not specify the scope, the storage account will not be able to be created correctly (it relies on the resourceGroup().location). 
+    - The `params` are the parameters that are needed for the storage account deployment.  Notice how the location also leverages the resource group location from the first part of the deployment.  Because the storage account is dependent for the scope and the location, there is no need to worry about dependency ordering because bicep is smart enough to know that you can't do the storage account without the resource group here.
+
+1. Add the parameters for the storage account deployment to the `deployAll.bicep` template
+
+    To make this work, you'll need the three parameters that the storage account module requires.  Don't forget to bring the decorators along for the ride as well.
+
+    >**Note:** `environment` is a reserved word.  For that reason, I've changed the parameter here to `deploymentEnvironment` to avoid any issues.
+
+    ```bicep
+    targetScope = 'subscription'
+
+    param rgName string
+    param location string
+
+    @minLength(3)
+    param storageAccountName string
+    @minLength(11)
+    @maxLength(11)
+    param uniqueIdentifier string
+    @minLength(3)
+    @maxLength(4)
+    @allowed([
+    'dev'
+    'prod'
+    ])
+    param deploymentEnvironment string = 'dev'
+
+    //...
+    ```
+
+    The current bicep file should look as follows:
+
+    ```bicep
+    targetScope = 'subscription'
+
+    param rgName string
+    param location string
+
+    @minLength(3)
+    param storageAccountName string
+    @minLength(11)
+    @maxLength(11)
+    param uniqueIdentifier string
+    @minLength(3)
+    @maxLength(4)
+    @allowed([
+      'dev'
+      'prod'
+    ])
+    param deploymentEnvironment string = 'dev'
+
+    resource iacTrainingResourceGroup 'Microsoft.Resources/resourceGroups@2018-05-01' = {
+      name: rgName
+      location: location
+    }
+
+    module iacTrainingModuleStorage 'storageAccount.bicep' = {
+      name: 'iacTrainingStorage'
+      scope: iacTrainingResourceGroup
+      params: {
+        storageAccountName: storageAccountName
+        uniqueIdentifier: uniqueIdentifier
+        environment: deploymentEnvironment
+        location: iacTrainingResourceGroup.location
+      }
+    }
+    ```
+
+1. Add the parameters to your `deployAll.parameters.json` file
+
+    Copy the three parameters from the `storageAccount.parameters.json` file and put them in the `deployAll.parameters.json` file.  Change the `environment` parameter to `deploymentEnvironment` in the json file:
+
+    ```json
+    {
+        "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+        "contentVersion": "1.0.0.0",
+        "parameters": {
+            "rgName": {
+                "value": "iac-training-rg"
+            },
+            "location": {
+                "value": "eastus"
+            },
+            "storageAccountName": {
+                "value": "mystorage"
+            },
+            "uniqueIdentifier": {
+                "value": "20291231acw"
+            },
+            "deploymentEnvironment": {
+                "value": "dev"
+            }
+        }
+    }
+    ```  
+
+1. Run the deployment again.
+
+    ```bash  
+    az deployment sub create --name $deploymentName --location $loc --template-file deployAll.bicep --parameters deployAll.parameters.json 
+    ```  
+
+    Make sure the deployment works as expected and drill in to see that you have both the resource group and the storage account listed as deployment steps in the portal.
+
+    !["The deployment shows all steps taken, including the resource group and the storage account"](images/Part1-bicep/image0026-deployAllWithStorageModule.png)  
+
 
 ### Step 3 - Create an output for the storage account 
 
-Examine the output of the deployment in the portal
+Now that the storage account and resource group can be run from the subscription level, you may have a need to work with one resource in another module for the deployment.  To show what this would look like, first we need an output from the original resource.
+
+>**Note**: This next part is contrived for learning purposes only.  In the real world you would likely include the container as part of the storage deployment.  In part 2, you'll get a chance to repeat this learning in a more intense deployment.  Please note that you would not typically do this for a storage account/container in a real-world scenario.
+
+1. Get the storage account id as an output from the storage deployment module.
+
+    To create an output you just add an output, which is typically positioned at the bottom of the deployment file.
+
+    Modify the `storageAccount.bicep` file to include the following outputs (we will not need them all but we want to learn)
+
+    ```bicep
+    output storageAccountName string = storageaccount.name
+    output storageAccountId string = storageaccount.id
+    output storageAccountLocation string = storageaccount.location
+    ```  
+
+1. Save the file and run the subscription-level deployment again. 
+
+    Save the changes above and hit the "up" arrow to re-run the subscription-level deployment.
+
+    !["Drill into the deployment part 1 - get to the storage deployment"](images/Part1-bicep/image0027-deploymentPart1.png)  
+
+    Open the deployment and drill into the storage account deployment.  You should see the outputs as listed at the bottom of the deployment:
+
+    !["Drill into the deployment part 2 - see the outputs"](images/Part1-bicep/image0028-deploymentPart2.png)   
+
 
 ### Step 4 - Show how to leverage an output in another deployment
 
