@@ -7,7 +7,10 @@ In this first part, you will learn about Infrastructure as Code (IaC) and how to
 
 ## Prerequisites
 
-To complete this activity, you must have an editor like VSCode, an Azure Subscription with contributor access, and the Azure CLI installed.
+To complete this activity, you must have an editor like VSCode, an Azure Subscription with contributor access, and the Azure CLI installed, and you must also have installed the Azure bicep tools.
+
+- [VSCode with bicep extension](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install#visual-studio-code-and-bicep-extension)  
+- [Azure CLI and Bicep tools](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install#azure-cli)  
 
 ## Part 1: Introduction to IaC
 
