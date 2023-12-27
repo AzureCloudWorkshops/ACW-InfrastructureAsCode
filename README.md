@@ -108,7 +108,7 @@ However, in real deployments for your company, you'll likely see a deployment th
 
 ## Step 1: Introduction to IaC
 
-The first module gives you an introduction to IaC.  You'll learn about how to work with Bicep or Terraform to create a simple resource group and storage account.  You'll also learn about thigns like:
+The first module gives you an introduction to IaC.  You'll learn about how to work with Bicep or Terraform to create a simple resource group and storage account.  You'll also learn about things like:
 
 - parameters
 - variables
