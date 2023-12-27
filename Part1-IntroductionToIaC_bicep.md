@@ -375,16 +375,221 @@ To ensure that everything is still working as expected, this would be a great ti
 az deployment group create --resource-group $rg --template-file storageAccount.bicep --parameters storageAccount.parameters.json
 ```  
 
+### Completion Check
+
+At this point you have split the parameters for the name and unique identifier and you are using the resourceGroup().location function to set the location for deployment based on the group where the storage account will be housed.
 
 ### Step 4 - Add a unique string to the storage account name
 
+As it stands, the storage account name is not unique.  To make it unique, you can add a unique string to the end of the storage account name.  To do this, you can use the `uniqueString()` function.  Typically, this is done with the resource group id, however, you can use any string.  
+
+```bash
+uniqueString(resourceGroup().id)
+```
+
+To make this work, add the unique string to the end of the storage account name variable:
+
+```bicep
+param storageAccountName string
+param location string = resourceGroup().location
+param uniqueIdentifier string
+
+var storageAccountNameFull = '${storageAccountName}${uniqueIdentifier}${uniqueString(resourceGroup().id)})}'
+
+resource storageaccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
+  name: storageAccountNameFull
+  location: location
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
+}
+```  
+
+Run the deployment again.  If this works, you will now have two storage accounts, one with the original name and one with the unique string at the end.  Let's find out if it will work:
+
+```bash  
+az deployment group create --resource-group $rg --template-file storageAccount.bicep --parameters storageAccount.parameters.json
+```  
+
+!["The deployment should fail for the storage account name being too long"](images/Part1-bicep/image0013-errorStorageAccountNameTooLong.png)  
+
+>**ERROR:** Uh-oh! You should have received an error.  The reason for this is that the storage account name is too long.  The minimum length for a storage account name is 3 characters, and the maximum is 24.  To fix this, you can use the `length()` function to ensure that the storage account name is at least 3 characters long.  
+
+As you can see, the unique string appended to the end of the storage account name makes the account name too long.  To fix this, you can also use a substring function to truncate the unique string:
+
+```bicep
+var storageAccountNameFull = substring('${storageAccountName}${uniqueIdentifier}${uniqueString(resourceGroup().id)})}', 0, 24)
+```  
+
+Note the positioning of each function, where the string begins and ends, and the length start at 0 and end at 24.  This will ensure that the storage account name is never longer than the 24 characters.  Can you see that there may still be a problem?  If not, try to figure it out before moving on.
+
+>**Hint:** What do you think will happen if the name of the storage account with all the appended text is less than 24 characters?
+
+We know for sure this one will be long enough so let's deploy again and make sure it works as-is when the name is long enough (i.e. 24 or more characters):
+
+```bicep
+param storageAccountName string
+param location string = resourceGroup().location
+param uniqueIdentifier string
+
+var storageAccountNameFull = substring('${storageAccountName}${uniqueIdentifier}${uniqueString(resourceGroup().id)})}', 0, 24)
+
+resource storageaccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
+  name: storageAccountNameFull
+  location: location
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
+}
+```  
+
+```bash  
+az deployment group create --resource-group $rg --template-file storageAccount.bicep --parameters storageAccount.parameters.json
+```  
+
+As expected, this time it did work and did deploy a second storage account as per the naming convention with the appended partial unique string:
+
+!["The deployment should work and you should now have two storage accounts, the original and the new one with the truncated name"](images/Part1-bicep/image0014-storageAccountWithTruncatedUniqueStringInName.png)  
+
 ### Step 5 - Use decorators to ensure storage account name is unique and is long enough
 
-### Step 6 - Deploy via parameters file, using the functions and variables added above
+As mentioned above, everything is great when the string for the storage account name is at least 24 characters long.  However, the parameterization makes is possible in the current state that this would not be the case.
+
+Modify the storage account name to `sa` and uniqueIdentifier parameters to just your initials in the `parameters.json` file:
+
+```json
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "storageAccountName": {
+            "value": "sa"
+        },
+        "uniqueIdentifier": {
+            "value": "acw"
+        }
+    }
+}
+```
+
+Run the deployment again, what happens?
+
+!["The name of the storage account is too short for the substring function to work as expected"](images/Part1-bicep/image0015-nametooshort.png)  
+
+The name is too short.  To fix this, you can use a decorator to ensure that the parameters are a certain length.  To do this, add the following decorator to the `storageAccountName` and the `uniqueIdentifier` parameters:
+
+```bicep
+@minLength(3)
+param storageAccountName string
+param location string = resourceGroup().location
+@minLength(11)
+@maxLength(11)
+param uniqueIdentifier string
+
+var storageAccountNameFull = substring('${storageAccountName}${uniqueIdentifier}${uniqueString(resourceGroup().id)})}', 0, 24)
+
+//...
+```
+
+The min/max length decorators will ensure your bicep won't deploy unless the minimum and/or maximum lengths are correct.  By doing this, you can ensure that your storage account name will never be too short and will always be unique at 24 characters.
+
+Try running the deployment with the bad parameters again, what happens?
+
+!["The deployment fails for preflight check due to the parameter name being too short"](images/Part1-bicep/image0016-parameterLengthInvalid.png)  
+
+Change the parameters back to the original values in the `parameters.json` file and run the deployment again.  This time it should work as expected.
+
+>**Further Study**
+
+Time permitting, another parameter decorator that you should be aware of is the `@allowed` parameter decorator.  This decorator allows you to specify a list of allowed values for a parameter.  For example, if you wanted to ensure that the location was only ever `eastus` or `westus`, you could use the following decorator:
+
+```bicep
+@allowed([
+  'eastus'
+  'eastus2'
+  'westus'
+  'westus2'
+])
+param location string 
+```  
+
+However, this will not work with the `resourceGroup().location` function.  For that reason, assume you need to name the storage account based on the environment.  Add a new parameter for the environment and append it into the string for the storage account name:
+
+
+```bicep
+@minLength(3)
+param storageAccountName string
+param location string = resourceGroup().location
+@minLength(11)
+@maxLength(11)
+param uniqueIdentifier string
+@minLength(3)
+@maxLength(4)
+@allowed([
+  'dev'
+  'prod'
+])
+param environment string = 'dev'
+
+var storageAccountNameFull = substring('${storageAccountName}${uniqueIdentifier}${environment}${uniqueString(resourceGroup().id)})}', 0, 24)
+
+resource storageaccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
+  name: storageAccountNameFull
+  location: location
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
+}
+```  
+
+Run the deployment again.  
+
+Now you have three storage accounts, the original, the one with the truncated unique id, and the new one with `dev`.
+
+!["Three storage accounts are now created"](images/Part1-bicep/image0017-threeStorageAccounts.png)  
+
+You now have a very powerful template that can deploy a storage account with a unique name to any resource group in any location and can be toggled for the environment to `dev` or `prod`.
+
+Add the parameter to the `parameters.json` file, and set the value to `prod` then run again.  You should now have four storage accounts, the original, the one with the truncated unique id, the one with `dev`, and the one with `prod`:
+
+```json
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "storageAccountName": {
+            "value": "mystorage"
+        },
+        "uniqueIdentifier": {
+            "value": "20291231acw"
+        },
+        "environment": {
+            "value": "prod"
+        }
+    }
+}
+```
+
+```bash
+az deployment group create --resource-group $rg --template-file storageAccount.bicep --parameters storageAccount.parameters.json
+```  
+
+!["There are now four storage accounts"](images/Part1-bicep/image0018-fourStorageAccounts.png)
+
+What do you think will happen if you run the deployment again?  If you are unsure, try it again and see what happens.
+
+What do you think will happen if you change the value of the parameter in the json file to `uat`?  Try it and see what happens.
+
+!["Failure due to invalid parameter"](images/Part1-bicep/image0019-uatisnotallowed.png)
+
+>**Note:** The final files generated to this point can be found in the parent repository under the `src/iac/bicep/storagePart1` folder.  
 
 ### Completion Check
 
-You can now deploy the same file to different resource groups multiple times and it will create a unique storage account name per group without changing the name of the storage account.  While we are not doing this in this activity, you could do so on your own for practice if you would like (you'll need another resource group to deploy to).  
+You can now deploy the same file to different resource groups multiple times and it will create a unique storage account name per group and per environment by changing a couple of simple parameters and using built-in functions.  While we are not doing this in this activity, you could do so on your own for practice if you would like (you'll need another resource group to deploy to, and you could try both dev and prod deployments).  
 
 ## Task 5 - Use modules and outputs
 
