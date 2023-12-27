@@ -71,41 +71,6 @@ Before proceeding, ensure that you can answer yes to the following questions:
 - Do you have a local repository with the code in place?
 - Does the application run on your local machine and work as expected to register a user and perform CRUD operations around contacts?
 
-## Step 0: Basics of Azure deployment, RBAC, and Policy scopes
-
-Before getting started, it's important to note that there are scopes for executing deployments at Azure.  The following scopes are available:
-- management group
-- subscription
-- resource group
-
-### Management Groups
-
-Management groups can have multiple subscriptions, so they are the top-level scope.  Anything done at the management group level can 'trickle-down' to the subscriptions and resource groups below it.  For example, if you assign a policy at the management group level, it will apply to all subscriptions and resource groups below it. If you create the policy at the management group but don't apply it, it will not apply to the subscriptions and resource groups below it unless they directly implement the policy.
-
-Only some resources make sense to deploy at this level.  For example, you typically deploy policies at this level.  You may also deploy things like Azure Monitor Workspaces, Azure Security Center, etc.  You would not deploy things like storage accounts, virtual machines, etc. at this level, as those are typically scoped to a subscription in a resource group.
-
-Management groups can be nested within other management groups as well. For example, you may have a management group for your entire organization, and then you may have management groups for each department, and then you may have management groups for each team within the department.  This is a good way to organize your resources and deployments, but it is not required, and this is typically not done unless you have a large organization with many teams and/or departments.
-
-### Subscriptions
-
-Subscriptions are the next level down from management groups.  Subscriptions are an excellent barrier for RBAC, policy, and billing so at this level, resources are typically mapped to environments and/or clients.  You can have multiple subscriptions under a single management group.  You can also have multiple resource groups under a subscription.  For example, common solutions for a single organization may be to have a subscription for each environment (dev, prod).  If your company has multiple clients, you may have a subscription for each client, and you many even have multiple subscriptions for each client (for the client dev, prod, etc).
-
-### Resource Groups
-
-Resource groups are a barrier for resources that are typically grouped together for lifecycle and/or security purposes. Resource groups are really for us humans that can't keep things straight in our heads over multiple workloads.  Azure will allow you to group in resource groups but that does not limit you to what can be deployed or to which region the resources can be deployed.  For example, you can deploy a storage account in a resource group in the East US region and a virtual machine in the same resource group in the West US region.  This is not recommended, but it is possible.  Typically, it would be recommended to separate workloads such as your web application with it's database, virtual machines, keyvaults, etc into groups that make sense both from a security and lifecycle perspective.  
-
-For example, RBAC controls can let a client view resources only in one single resource group where your team might need to see all of the groups (subscription-level permissions).  
-
-All resources live in resource groups, so it will be up to your team on how you want to deploy them.
-
-### Why is this important?  
-
-The reason this is important is because you can run deployments that only target a single resource group or you can run a deployment that targets the subscription and can therefore span multiple resource groups.
-
-For example, suppose you just need a single storage account.  You can do that deployment to a single resource group.  Your IAC principal then only needs permission to that resource group (we'll do this in the first activity).
-
-However, in real deployments for your company, you'll likely see a deployment that spans your entire subscription.  For example, you may have a deployment that creates a resource group for your web application and its resources, a resource group for your KeyVault used to encrypt storage and database keys, and in more robust scenarios you may also need to deploy networks and resources related to the networking. In these cases, you'll need to have permissions to the entire subscription, and you will likely create an orchestrator file (just a bicep or terraform file that calls other bicep or terraform files) that will deploy all of the resources with one deployment operation calling to modules. We will do this in part two when we deploy the entire application in part 2.
-
 ## Step 1: Introduction to IaC
 
 The first module gives you an introduction to IaC.  You'll learn about how to work with Bicep or Terraform to create a simple resource group and storage account.  You'll also learn about things like:
@@ -116,10 +81,7 @@ The first module gives you an introduction to IaC.  You'll learn about how to wo
 - modules
 - scopes
 
-Complete one or both of the following modules to learn about IaC and how to work with Bicep or Terraform.
-
-- [Introduction to IaC - Bicep](Part1-IntroductionToIaC_bicep.md)
-- [Introduction to IaC - Terraform](Part1-IntroductionToIaC_terraform.md)
+Complete the introductory module then choose one or both of the submodules for Bicep and/or Terraform to learn about IaC and how to work with Bicep or Terraform.  
 
 ## Completion Check
 
@@ -134,10 +96,9 @@ Before moving on, ensure that you have a full understanding of how to create a d
 
 In this step you will build the IaC that will provision the entire environment for the application.
 
-Complete one or both of the following modules to learn about IaC and how to work with Bicep or Terraform.
+Complete the introductory module then choose one or both of the submodules for Bicep and/or Terraform to learn about IaC and how to work with Bicep or Terraform.  
 
-- [Introduction to IaC - Bicep](Part2-BuildingTheInfrastructure_bicep.md)
-- [Introduction to IaC - Terraform](Part2-BuildingTheInfrastructure_terraform.md)
+- [Building the Infrastructure](Part2-BuildingTheInfrastructure.md)
 
 ### Completion Check
 
@@ -153,9 +114,7 @@ The following resources are needed to complete this walkthrough:
 
 ## Step 3: Build CI/CD to deploy the application
 
-In this step you will build out the CI/CD pipeline to deploy the application to Azure.  You will use GitHub Actions to build the pipeline (or another pipeline/action from another source control provider).
-
-Complete one or both of the following modules to learn about IaC and how to deploy with GitHub.
+In this step you will build out the CI/CD pipeline to deploy the application to Azure.  You will use GitHub Actions to build the pipeline (or another pipeline/action from another source control provider).  This part will be the same regardless of which architecture you choose to use for the IaC. 
 
 - [Part 3 - Implementing the CI/CD](Part3-ImplementingCICD.md)
 
