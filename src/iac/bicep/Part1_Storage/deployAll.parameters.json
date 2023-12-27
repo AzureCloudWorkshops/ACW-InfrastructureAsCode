@@ -1,0 +1,24 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "rgName": {
+            "value": "iac-training-rg"
+        },
+        "location": {
+            "value": "eastus"
+        },
+        "storageAccountName": {
+            "value": "mystorage"
+        },
+        "uniqueIdentifier": {
+            "value": "20291231acw"
+        },
+        "deploymentEnvironment": {
+            "value": "dev"
+        },
+        "containerName": {
+            "value": "iac-training-storage-container"
+        }
+    }
+}

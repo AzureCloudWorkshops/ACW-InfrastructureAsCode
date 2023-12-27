@@ -47,66 +47,75 @@ To get started, you will need to have a terminal open to run the azure cli.  You
 
 ### Step 1 - Ensure Azure CLI  
 
-Begin by making sure you can run the Azure CLI.  You can do this by running the following command:
+Begin by making sure you can run the Azure CLI.  
 
-```bash
-az --version
-```  
->**Note:** if you do not see a current version of the Azure CLI as shown below, you will not be able to complete the next part of this task from your local machine.
+1. Execute the following command to validate Azure CLI is installed:
 
-!["Checking the Azure CLI version in both PowerShell and Bash"](images/Part1-common/image0001-azversion.png)
+    ```bash
+    az --version
+    ```  
+    >**Note:** if you do not see a current version of the Azure CLI as shown below, you will not be able to complete the next part of this task from your local machine.
+
+    !["Checking the Azure CLI version in both PowerShell and Bash"](images/Part1-common/image0001-azversion.png)
 
 ### Step 2 - Log in to Azure
 
-Continuing on your local machine: 
+After validating the CLI is installed, make sure to continue on your local machine by logging in to Azure.
 
-```text  
-Enter the command az login
-```  
+1. Log In to Azure
 
-!["Logging into Azure"](images/Part1-common/image0002-azlogin.png)  
+    Enter the following command to log in to Azure:
+    ```bash  
+    az login
+    ```  
 
-A browser window will open, enter login credentials or select an account that you are already logged in to.
+    !["Logging into Azure"](images/Part1-common/image0002-azlogin.png)  
 
-!["Selecting an account in the browser"](images/Part1-common/image0003-azloginselectyouraccount.png)  
+1. A browser window will open, enter login credentials or select an account that you are already logged in to.
 
-A confirmation window will appear.
+    !["Selecting an account in the browser"](images/Part1-common/image0003-azloginselectyouraccount.png)  
 
-!["Login confirmation"](images/Part1-common/image0004-azloginconfirmationdialog.png)  
+1. A confirmation window will appear.
+
+    !["Login confirmation"](images/Part1-common/image0004-azloginconfirmationdialog.png)  
 
 >**Note:** If you are having trouble getting logged in from your local machine, you can use the Azure Cloud Shell to complete the work in this training.  You can find instructions on how to use the Azure Cloud Shell [here](https://docs.microsoft.com/en-us/azure/cloud-shell/overview).  You will need to use the shell and run the commands as shown in these walkthroughs, but you will need to also ensure you have the files for your deployments created in the shell as well if you go this route.  Using the azure cloud shell will not be shown in the walkthroughs, so if you go this route you will need to figure out how to create the files in the shell and run the commands as shown in the walkthroughs.
 
 ### Step 3 - Ensure your subscription
 
-Before doing any local deployments, it is a very good practice to make sure you are deploying to the correct subscription.  You can do this by running the following command:
+Before doing any local deployments, it is a very good practice to make sure you are deploying to the correct subscription.  
 
-```bash
-az account show
-```  
+1. Determine what subscription you are currently set to execute against.
 
-!["Making sure you are on the correct subscription with the az account show command"](images/Part1-common/image0005-azaccountshowoutput.png) 
+    ```bash
+    az account show
+    ```  
 
-Review the output and determine that you are on the correct subscription.  You can see the name of the subscription and the subscription id.  Either can be used to set your subscription.  
+    !["Making sure you are on the correct subscription with the az account show command"](images/Part1-common/image0005-azaccountshowoutput.png) 
 
-If you need to change your subscription, you can do so by running the following commands:
+    Review the output and determine that you are on the correct subscription.  You can see the name of the subscription and the subscription id.  Either can be used to set your subscription. 
 
-```bash
-az account list -o table
-```  
+    If you are on the correct subscription, you can continue to the next task.
 
-!["Listing the subscriptions with the az account list command"](images/Part1-common/image0006-azaccountlistoutput.png)  
+1. If you need to change your subscription, you can do so by running the following commands:
 
-Then, using the subscription id or name, run the following command:
+    ```bash
+    az account list -o table
+    ```  
 
-```bash
-az account set --subscription <either-the-subscription-id or-name-goes-here>
-```  
+    !["Listing the subscriptions with the az account list command"](images/Part1-common/image0006-azaccountlistoutput.png)  
 
-!["Setting the subscription with the az account set command"](images/Part1-common/image0007-azaccountsetandazaccountshow.png)
+    Then, using the subscription id or name, run the following command:
 
-Run the `az account show` command again to ensure you are on the correct subscription.
+    ```bash
+    az account set --subscription <either-the-subscription-id or-name-goes-here>
+    ```  
 
-Ensure you are on the correct subscription before continuing.
+    !["Setting the subscription with the az account set command"](images/Part1-common/image0007-azaccountsetandazaccountshow.png)
+
+    Run the `az account show` command again to ensure you are on the correct subscription.
+
+    Ensure you are on the correct subscription before continuing.
 
 ## Task 2 - Create a resource group
 
@@ -122,53 +131,57 @@ To create a resource group, you will need to set the name and location for the g
 
 The name of the resource group should also make sense for the scope of your work.  For this, you are doing a simple deployment, so you can name it something like `iac-training-rg`.  You can name it whatever you want, but make sure it makes sense for the scope of your work and that you'll be confident you could delete the group later without fear of losing your work.
 
-Set variables to manage your group name and your location of choice (use either bash or powershell, not both):
+1. Set variables to manage your group name and your location of choice (use either bash or powershell, not both):
 
-Bash:  
+    Bash:  
 
-```bash
-rg=iac-training-rg
-loc=eastus
-echo $rg
-echo $loc
-```  
+    ```bash
+    rg=iac-training-rg
+    loc=eastus
+    echo $rg
+    echo $loc
+    ```  
 
-!["Setting the variables for the resource group name and location"](images/Part1-common/image0008-rgandlocvariables-bash.png)
+    !["Setting the variables for the resource group name and location"](images/Part1-common/image0008-rgandlocvariables-bash.png)
 
-PowerShell:  
+    PowerShell:  
 
-```PowerShell
-$rg="iac-training-rg"
-$loc="eastus"
-echo $rg
-echo $loc
-```  
+    ```PowerShell
+    $rg="iac-training-rg"
+    $loc="eastus"
+    echo $rg
+    echo $loc
+    ```  
 
-!["Setting the variables for the resource group name and location"](images/Part1-common/image0008-rgandlocvariables-powershell.png)
+    !["Setting the variables for the resource group name and location"](images/Part1-common/image0008-rgandlocvariables-powershell.png)
 
 ### Step 2 - Create the resource group
 
-With the variables in place, you can create and validate the existence of the resource group with the following commands:
+With the variables in place, you can create and validate the existence of the resource group.
 
->**Note:** Only bash is shown below but the same commands work in PowerShell.
+1. Create the group
 
-```bash
-az group create -n $rg -l $loc
-```  
+    >**Note:** Only bash is shown below but the same commands work in PowerShell.
 
-!["Creating the resource group with the az group create command"](images/Part1-common/image0009-azgroupcreate.png)  
+    ```bash  
+    az group create -n $rg -l $loc
+    ```  
 
-```bash
-az group exists -n $rg
-```  
+1. Validate the group exists via the CLI:
 
-!["Validating the resource group exists with the az group exists command"](images/Part1-common/image0010-azgroupexists.png)
+    !["Creating the resource group with the az group create command"](images/Part1-common/image0009-azgroupcreate.png)  
 
-You can also validate in the portal:
+    ```bash
+    az group exists -n $rg
+    ```  
 
-!["Validating the resource group exists in the portal"](images/Part1-common/image0011-azgroupexistsinportal.png)
+    !["Validating the resource group exists with the az group exists command"](images/Part1-common/image0010-azgroupexists.png)
 
->**Note**: The name of your resource group will be whatever you name it, so don't be alarmed if you named it something different than what is shown or used any other region than eastus, as there are no restrictions on the name or location of the resource group for this walkthrough and any region with a resource group of any name will work.
+1. You can also validate in the portal
+
+    !["Validating the resource group exists in the portal"](images/Part1-common/image0011-azgroupexistsinportal.png)
+
+>**Note**: The name of your resource group will be whatever you name it, so don't be alarmed if you named it something different than what is shown or used any other region than `eastus`, as there are no restrictions on the name or location of the resource group for this walkthrough and any region with a resource group of any name will work.
 
 ## Task 3: Complete the IaC activity with Bicep or Terraform
 
@@ -178,6 +191,8 @@ Choose your path and complete the work using the tool of your choice.  You can d
 
 >**Important**: There will be requirements for a unique name. When this happens, use the YYYYMMDD of today along with your initials.  For example, if today is 2025-08-15 and your initials are `acw`, your unique identfier would be `20250815acw`.  Append your unique identifier to the end of variables like the storage account name.  This will ensure that you don't have naming conflicts with other people in the workshop.  For example, if the storage account is named `mystorage` then your actual storage account name should be `mystorage20250815acw`.
 
-[Part 1 - Introduction to IaC - Bicep](Part1_IntroductionToIaC_bicep.md)  
+1. Complete [Part 1 - Introduction to IaC - Bicep](Part1_IntroductionToIaC_bicep.md)  
 
-[Part 1 - Introduction to IaC - Terraform](Part1_IntroductionToIaC_terraform.md)  
+- or -
+
+1. Complete [Part 1 - Introduction to IaC - Terraform](Part1_IntroductionToIaC_terraform.md)  

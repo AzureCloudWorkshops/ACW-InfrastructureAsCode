@@ -22,7 +22,3 @@ resource storageaccount 'Microsoft.Storage/storageAccounts@2021-02-01' = {
     name: 'Standard_LRS'
   }
 }
-
-output storageAccountName string = storageaccount.name
-output storageAccountId string = storageaccount.id
-output storageAccountLocation string = storageaccount.location
