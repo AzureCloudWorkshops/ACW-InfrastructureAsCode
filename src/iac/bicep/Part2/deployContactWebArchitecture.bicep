@@ -3,7 +3,7 @@ targetScope = 'subscription'
 param rgName string
 param location string
 
-resource iacTrainingResourceGroup 'Microsoft.Resources/resourceGroups@2018-05-01' = {
+resource contactWebResourceGroup 'Microsoft.Resources/resourceGroups@2018-05-01' = {
   name: rgName
   location: location
 }

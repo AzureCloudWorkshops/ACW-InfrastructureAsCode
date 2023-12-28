@@ -452,7 +452,7 @@ jobs:
     param rgName string
     param location string
 
-    resource iacTrainingResourceGroup 'Microsoft.Resources/resourceGroups@2018-05-01' = {
+    resource contactWebResourceGroup 'Microsoft.Resources/resourceGroups@2018-05-01' = {
       name: rgName
       location: location
     }
@@ -466,7 +466,7 @@ jobs:
         "contentVersion": "1.0.0.0",
         "parameters": {
             "rgName": {
-                "value": "iac-training-rg"
+                "value": "ContactWebApplicationRG"
             },
             "location": {
                 "value": "eastus"
@@ -513,7 +513,7 @@ provider "azurerm" {
 }
 
 # Define any Azure resources to be created here. A simple resource group is shown here as a minimal example.
-resource "azurerm_resource_group" "rg-iac-deployment-tfghactions" {
+resource "azurerm_resource_group" "rg-contact-web-application" {
   name     = var.resource_group_name
   location = var.location
 }
@@ -522,7 +522,7 @@ resource "azurerm_resource_group" "rg-iac-deployment-tfghactions" {
     Add the following to your `terraform.tfvars` file:
 
 ```terraform  
-resource_group_name = "rg-terraform-github-actions"
+resource_group_name = "ContactWebApplicationRG"
 location            = "eastus"
 ```   
 
@@ -544,6 +544,12 @@ variable "location" {}
     You can also see that the run completed in the portal as expected by going to the `Subscription` -> `Deployments` blade and looking for the deployment name you specified in the workflow.
 
     !["Deployment in the portal"](images/Part2-common/image0024-deploymentInThePortal.png)  
+
+1. Validate the resource group exists in the portal (optional)
+
+    You should also now see the rg existing in the portal.
+
+    !["Contact Web Resource group with selections around the name, subscription, and location for validation"](images/Part2-common/image0025-resourceGroupCreatedAsExpected.png)  
 
 ## Completion check
 
