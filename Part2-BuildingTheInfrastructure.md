@@ -19,7 +19,6 @@ In part 2 of this workshop, we're going to get the entire infrastructure deploye
     - secret for database connection string
 - Azure SQL Server
 - Azure SQL Database
-- Azure App Configuration (time permitting)
 
 All of this will be done from GitHub Actions, not from the command line.  You can still test from the command line but the best solution will be to ensure that everything is working from GitHub Actions.
 
