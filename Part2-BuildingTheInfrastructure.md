@@ -444,7 +444,7 @@ jobs:
     - Create a file called `deployContactWebArchitecture.bicep` in the `iac` folder of your repo.
     - Create a file called `deployContactWebArchitecture.parameters.json` in the `iac` folder of your repo.
 
-    Add the following code to your `deployContactWebArchitecture.bicep` file (this should look really familiar, as it's just creating the resource group for now):
+    Add the following code to your `deployContactWebArchitecture.bicep` file:
 
     ```bicep
     targetScope = 'subscription'
@@ -474,6 +474,8 @@ jobs:
         }
     }
     ```  
+
+    >**Note:** The bicep files above can be found in the `iac/bicep/Part2/starter` folder of this repo.
 
     For Terraform:  
 

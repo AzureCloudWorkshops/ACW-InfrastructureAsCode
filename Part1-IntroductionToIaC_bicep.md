@@ -610,7 +610,7 @@ As mentioned above, everything is great when the string for the storage account 
 
     !["Failure due to invalid parameter"](images/Part1-bicep/image0019-uatisnotallowed.png)
 
->**Note:** The final files generated to this point can be found in the parent repository under the `src/iac/bicep/storagePart1` folder (the files with `_rgLevel` are what you should have at this point).  You will need working files in the next part of the activity, so if yours are not working, make sure to leverage the source to see where you may have gone wrong.  The final files from this module are also in the `storagePart1` folder but they contain all the changes about to be made for the next steps.
+>**Note:** The final files generated to this point can be found in the parent repository under the `src/iac/bicep/Part1/ResourceGroupLevelDeployment` folder.  You will need working files in the next part of the activity, so if yours are not working, make sure to leverage the source to see where you may have gone wrong.  The final files from this module are also in the ``src/iac/bicep/Part1` folder but they contain all the changes about to be made for the next steps.
 
 ### Completion Check
 
