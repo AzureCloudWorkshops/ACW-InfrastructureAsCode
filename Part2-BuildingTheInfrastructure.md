@@ -180,17 +180,247 @@ With the Azure credentials in place, it's time to get the GitHub Actions set up 
 
 Once this is completed, you will be able to check in code changes and rely on the automation to run your templates (no longer needing to be logged in and run from your command line).  
 
+1. Navigate to your GitHub repository
 
+    Navigate to your GitHub repository where you have your code for the contact web application.
 
-## Task 3 - Create the automation action to execute the deployment
+1. Select `Settings` at the top of the repository.
+
+    !["Settings"](images/Part2-common/image0015-githubsettings.png)
+
+1. Select `Secrets and variables`, then `Actions`, then hit the `New Repository secret` on the left side of the screen.
+
+    !["Secrets and variables + Actions - new secret"](images/Part2-common/image0016-newsecret.png)  
+
+1. Enter three secrets
+
+    Secret one:  
+
+    - Secret name: `AZURE_SUBSCRIPTION_ID`
+    - Value: `<your azure subscription id>`  
+
+    Secret two:
+
+    - Secret name: `AZURE_CLIENT_ID_CONTACTWEB_DEV`
+    - Value: `<your service client id>`    
+
+    Secret three:
+
+    - Secret name: `AZURE_TENANT_ID`
+    - Value: `<your tenant id>`
+
+    >**Note:** Your subscription ID can be easily obtained from almost any resource or by running the cli command `az account show` (field: `id`) If you run `az account show` you will also get your Tenant Id (field: `tenantId` not `homeTenantId` which could be different).  Your tenant and client id's can be obtained from the overview screen of your app registration in the portal and you likely copied them earlier in this workshop.  You can also get your subscription ID from the portal -> Subscriptions -> overview blade.
+
+    !["Client ID"](images/Part2-common/image0017-clientid1.png)
+
+    !["Client ID and Tenant ID"](images/Part2-common/image0018_clientId2tenantid.png)  
+
+    !["Subscription ID"](images/Part2-common/image0019-SubscriptionId.png)  
+
+1. Validate that you have the three secrets ready to go.
+
+    You won't be able to see the values so if you have problems you may just need to come back here later and update the values in case something didn't copy/paste correctly.
+
+    You can validate that the three secrets are in place, however:
+
+    !["Repository Secrets"](images/Part2-common/image0020-reposecrets.png)  
 
 ## Completion check
 
-Do not move forward if you do not have a working IaC pipeline that executes a subscription-level deployment using your service principal credentials in your Azure subscription.
+Do not move forward until you have a service principal with the correct permissions to deploy to your subscription and you have the three secrets in place in your GitHub repository as you will not be able to complete the rest of this workshop/walkthrough without these in place.
+
+## Task 3 - Create the automation action to execute the deployment
+
+With everything in place to deploy, it's time to get the automation in place to execute the deployment.  This will be done via GitHub Actions.  Since the choice exists to do this with either bicep or terraform, this walkthrough will show how to do this with both.  The only part that will be different is the deployment action and the actual files used for deployment.  The rest of the workflow will generally be the same.
+
+1. Navigate to the `Actions` tab of your repository and select `set up a workflow yourself`.
+
+    !["Actions -> Set up a workflow yourself"](images/Part2-common/image0021-actionworkflow.png)  
+
+1. Use the appropriate following yaml file for your deployment type.
+
+    Bicep:  
+
+```yaml
+name: "Bicep Deploy Resources"
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env: 
+  CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }} 
+  AZURE_TENANT_ID:  ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_CLIENT_ID_CONTACTWEB_DEV: '${{ secrets.AZURE_CLIENT_ID_CONTACTWEB_DEV }}'
+  TEMPLATE: 'iac/main.bicep'
+  PARAMETERS: 'iac/main.parameters.json'  
+  DEPLOYMENT_NAME: 'BicepDeployResources'
+  REGION: 'eastus'
+  
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  dev-deploy:
+    name: Dev Deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: 'dev'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v1.4.6
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID_CONTACTWEB_DEV }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy Resources
+        uses: Azure/arm-deploy@v1.0.9
+        with:
+          scope: subscription
+          subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
+          region: ${{ env.REGION }}
+          template: '${{ env.TEMPLATE }}'
+          parameters: '${{ env.PARAMETERS }}'
+          deploymentName: '${{env.DEPLOYMENT_NAME}}-${{github.run_number}}'
+          failOnStdErr: true
+```
+
+Terraform:  
+
+```yaml
+name: "Terraform Deploy Resources"
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env: 
+  CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }} 
+  AZURE_TENANT_ID:  ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_CLIENT_ID_CONTACTWEB_DEV: '${{ secrets.AZURE_CLIENT_ID_CONTACTWEB_DEV }}'
+  TEMPLATE: 'iac/main.tf'
+  PARAMETERS: 'iac/main.tfvars'  
+  DEPLOYMENT_NAME: 'TerraformDeployResources'
+  REGION: 'eastus'
+  
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  dev-deploy:
+    name: Dev Deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: 'dev'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v1.4.6
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID_CONTACTWEB_DEV }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform Stuff Goes here
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+```
+
+    >**Note:** You don't currently have a `main.bicep` or `main.tf` file so the first run should fail for bad file paths.  You will create these files in the next task.
+
+1. Even though the run failed, validate login was successful
+
+    Before moving forward, you should have a successful login in your workflow.  If that did not work, then you need to make sure the three secrets are correct and that you ran from the main branch or with the `dev` environment credential (both should have been the case - you were likely on your main branch and you put the `dev` environment variable in if you copied the code above).
+
+    !["No file but login was successful"](images/Part2-common/image0022-loginsuccessjustneedfilebicep.png)  
+
+1. Add appropriate infrastructure file(s) to your repo.
+
+    For Bicep:  
+
+    - Create a file called `main.bicep` in the `iac` folder of your repo.
+    - Create a file called `main.parameters.json` in the `iac` folder of your repo.
+
+    Add the following code to your `main.bicep` file (this should look really familiar, as it's just creating the resource group for now):
+
+    ```bicep
+    targetScope = 'subscription'
+
+    param rgName string
+    param location string
+
+    resource iacTrainingResourceGroup 'Microsoft.Resources/resourceGroups@2018-05-01' = {
+      name: rgName
+      location: location
+    }
+    ```
+
+    Add the following to your `main.parameters.json` file:
+
+    ```json
+    {
+        "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+        "contentVersion": "1.0.0.0",
+        "parameters": {
+            "rgName": {
+                "value": "iac-training-rg"
+            },
+            "location": {
+                "value": "eastus"
+            }
+        }
+    }
+    ```  
+
+    For Terraform:  
+
+    - Create a file called `main.tf` in the `iac` folder of your repo.
+    - Create a file called `main.tfvars` in the `iac` folder of your repo.
+
+    Add the following code to your `main.tf` file (this should look really familiar, as it's just creating the resource group for now):
+
+    ```terraform  
+    ```  
+
+    Add the following to your `main.tfvars` file:
+
+    ```terraform  
+    ```   
+
+1. Check in your changes and ensure automation deployment completes successfully
+
+    You should now see the deployment work as expected, and your action should run to completion and create/ensure the resource group exists as expected.
+
+    !["Successful deployment"](images/Part2-common/image0023-deploysuccessful-bicep.png)  
+
+1. Validate the run in the portal (optional)
+
+    You can also see that the run completed in the portal as expected by going to the `Subscription` -> `Deployments` blade and looking for the deployment name you specified in the workflow.
+
+    !["Deployment in the portal"](images/Part2-common/image0024-deploymentInThePortal.png)  
+
+## Completion check
+
+Do not move forward if you do not have a working IaC pipeline that executes a subscription-level deployment using your service principal credentials in your Azure subscription.  You should have a main file for deployment orchestration and it should ensure that the resource group exists in your subscription.  If you do not have this, you will not be able to complete the rest of this workshop/walkthrough.
 
 ## Breakouts
 
-Complete the following part of the workshop that you would like to learn (or do both):
+With the deployment pipeline in place, complete the following part(s) of the workshop that you would like to learn about:
 
 1. Complete [Building the Infrastructure - Bicep](Part2-BuildingTheInfrastructure_bicep.md)
 
