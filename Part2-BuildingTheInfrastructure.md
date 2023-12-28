@@ -429,7 +429,7 @@ jobs:
 
 //TODO: Terraform above does not work and not sure what this will look like for tf users...
 
-    >**Note:** If doing bicep, you don't currently have a `deployContactWebArchitecture.bicep` file so you'll get a failure.  For Terraform if you had a working *.tf file you may have succeeded here. not sure yet.
+>**Note:** If doing bicep, you don't currently have a `deployContactWebArchitecture.bicep` file so you'll get a failure.  For Terraform if you had a working *.tf file you may have succeeded here. not sure yet.
 
 1. For Bicep: Even though the run failed, validate login was successful
 
