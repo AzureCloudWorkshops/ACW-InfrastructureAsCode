@@ -360,17 +360,25 @@ Terraform:
     ```terraform  
     ```   
 
-1. Check in your changes and validate deployment.
+1. Check in your changes and ensure automation deployment completes successfully
 
     You should now see the deployment work as expected, and your action should run to completion and create/ensure the resource group exists as expected.
 
+    !["Successful deployment"](images/Part2-common/image0023-deploysuccessful-bicep.png)  
+
+1. Validate the run in the portal (optional)
+
+    You can also see that the run completed in the portal as expected by going to the `Subscription` -> `Deployments` blade and looking for the deployment name you specified in the workflow.
+
+    !["Deployment in the portal"](images/Part2-common/image0024-deploymentInThePortal.png)  
+
 ## Completion check
 
-Do not move forward if you do not have a working IaC pipeline that executes a subscription-level deployment using your service principal credentials in your Azure subscription.
+Do not move forward if you do not have a working IaC pipeline that executes a subscription-level deployment using your service principal credentials in your Azure subscription.  You should have a main file for deployment orchestration and it should ensure that the resource group exists in your subscription.  If you do not have this, you will not be able to complete the rest of this workshop/walkthrough.
 
 ## Breakouts
 
-Complete the following part of the workshop that you would like to learn (or do both):
+With the deployment pipeline in place, complete the following part(s) of the workshop that you would like to learn about:
 
 1. Complete [Building the Infrastructure - Bicep](Part2-BuildingTheInfrastructure_bicep.md)
 
