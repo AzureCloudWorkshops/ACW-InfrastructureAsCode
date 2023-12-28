@@ -304,12 +304,10 @@ on:
   workflow_dispatch:
 
 env: 
+  ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID_CONTACTWEB_DEV }}"
+  ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+  ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
   CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }} 
-  AZURE_TENANT_ID:  ${{ secrets.AZURE_TENANT_ID }}
-  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  AZURE_CLIENT_ID_CONTACTWEB_DEV: '${{ secrets.AZURE_CLIENT_ID_CONTACTWEB_DEV }}'
-  TEMPLATE: 'iac/main.tf'
-  PARAMETERS: 'iac/main.tfvars'  
   DEPLOYMENT_NAME: 'TerraformDeployResources'
   REGION: 'eastus'
   
@@ -318,27 +316,115 @@ permissions:
   contents: read
 
 jobs:
-  dev-deploy:
-    name: Dev Deploy
+  terraform-plan:
+    name: 'Terraform Plan'
     runs-on: ubuntu-latest
-    environment:
-      name: 'dev'
+    env:
+      #this is needed since we are running terraform with read-only permissions
+      ARM_SKIP_PROVIDER_REGISTRATION: true
+    outputs:
+      tfplanExitCode: ${{ steps.tf-plan.outputs.exitcode }}
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Log in to Azure
-        uses: azure/login@v1.4.6
-        with:
-          client-id: ${{ env.AZURE_CLIENT_ID_CONTACTWEB_DEV }}
-          tenant-id: ${{ env.AZURE_TENANT_ID }}
-          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+    # Install the latest version of the Terraform CLI
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_wrapper: false
 
-      - name: Terraform Stuff Goes here
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      run: terraform init
+
+    # Checks that all Terraform configuration files adhere to a canonical format
+    # Will fail the build if not
+    - name: Terraform Format
+      run: terraform fmt -check
+
+    # Generates an execution plan for Terraform
+    # An exit code of 0 indicated no changes, 1 a terraform failure, 2 there are pending changes.
+    - name: Terraform Plan
+      id: tf-plan
+      working-directory: ${{ github.workspace }}/iac
+      run: |
+        export exitcode=0
+        terraform plan -detailed-exitcode -no-color -out tfplan || export exitcode=$?
+
+        echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
+        
+        if [ $exitcode -eq 1 ]; then
+          echo Terraform Plan Failed!
+          exit 1
+        else 
+          exit 0
+        fi
+        
+    # Save plan to artifacts  
+    - name: Publish Terraform Plan
+      uses: actions/upload-artifact@v3
+      with:
+        name: tfplan
+        path: tfplan
+        
+    # Create string output of Terraform Plan
+    - name: Create String Output
+      id: tf-plan-string
+      run: |
+        TERRAFORM_PLAN=$(terraform show -no-color tfplan)
+        
+        delimiter="$(openssl rand -hex 8)"
+        echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
+        echo "## Terraform Plan Output" >> $GITHUB_OUTPUT
+        echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo '```terraform' >> $GITHUB_OUTPUT
+        echo "$TERRAFORM_PLAN" >> $GITHUB_OUTPUT
+        echo '```' >> $GITHUB_OUTPUT
+        echo "</details>" >> $GITHUB_OUTPUT
+        echo "${delimiter}" >> $GITHUB_OUTPUT
+        
+    # Publish Terraform Plan as task summary
+    - name: Publish Terraform Plan to Task Summary
+      env:
+        SUMMARY: ${{ steps.tf-plan-string.outputs.summary }}
+      run: |
+        echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
+      
+  terraform-apply:
+    name: 'Terraform Apply'
+    if: github.ref == 'refs/heads/main' && needs.terraform-plan.outputs.tfplanExitCode == 2
+    runs-on: ubuntu-latest
+    environment: dev
+    needs: [terraform-plan]
+    
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      run: terraform init
+      working-directory: ${{ github.workspace }}/iac
+
+    # Download saved plan from artifacts  
+    - name: Download Terraform Plan
+      uses: actions/download-artifact@v3
+      with:
+        name: tfplan
+
+    # Terraform Apply
+    - name: Terraform Apply
+      run: terraform apply -auto-approve tfplan
+      working-directory: ${{ github.workspace }}/iac
 ```
 
     >**Note:** You don't currently have a `main.bicep` or `main.tf` file so the first run should fail for bad file paths.  You will create these files in the next task.
@@ -353,10 +439,10 @@ jobs:
 
     For Bicep:  
 
-    - Create a file called `main.bicep` in the `iac` folder of your repo.
-    - Create a file called `main.parameters.json` in the `iac` folder of your repo.
+    - Create a file called `deployContactWebArchitecture.bicep` in the `iac` folder of your repo.
+    - Create a file called `deployContactWebArchitecture.parameters.json` in the `iac` folder of your repo.
 
-    Add the following code to your `main.bicep` file (this should look really familiar, as it's just creating the resource group for now):
+    Add the following code to your `deployContactWebArchitecture.bicep` file (this should look really familiar, as it's just creating the resource group for now):
 
     ```bicep
     targetScope = 'subscription'
@@ -370,7 +456,7 @@ jobs:
     }
     ```
 
-    Add the following to your `main.parameters.json` file:
+    Add the following to your `deployContactWebArchitecture.parameters.json` file:
 
     ```json
     {
@@ -389,18 +475,61 @@ jobs:
 
     For Terraform:  
 
-    - Create a file called `main.tf` in the `iac` folder of your repo.
-    - Create a file called `main.tfvars` in the `iac` folder of your repo.
+    - Create a file called `deployContactWebArchitecture.tf` in the `iac` folder of your repo.
+    - Create a file called `terraform.tfvars` in the `iac` folder of your repo.
+    - Create a file called `variables.tf` in the `iac` folder of your repo.
+    - Ensure you have a resource group and container for the state file in your subscription as follows:
+    
+        - RG: `rg-terraform-github-actions-state`
+        - Storage Account: `tfghactionsYYYYMMDDxxx`
+        - container: `tfstate`
 
-    Add the following code to your `main.tf` file (this should look really familiar, as it's just creating the resource group for now):
+    Add the following code to your `deployContactWebArchitecture.tf` file:
 
-    ```terraform  
-    ```  
+```terraform  
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = ">= 3.7.0"
+    }
+  }
 
-    Add the following to your `main.tfvars` file:
+  # Update this block with the location of your terraform state file
+  backend "azurerm" {
+    resource_group_name  = "rg-terraform-github-actions-state"
+    storage_account_name = "tfghactions20291231acw"
+    container_name       = "tfstate"
+    key                  = "terraform.tfstate"
+    use_oidc             = true
+  }
+}
 
-    ```terraform  
-    ```   
+provider "azurerm" {
+  features {}
+  use_oidc = true
+}
+
+# Define any Azure resources to be created here. A simple resource group is shown here as a minimal example.
+resource "azurerm_resource_group" "rg-iac-deployment-tfghactions" {
+  name     = var.resource_group_name
+  location = var.location
+}
+```  
+
+    Add the following to your `terraform.tfvars` file:
+
+```terraform  
+resource_group_name = "rg-terraform-github-actions"
+location            = "eastus"
+```   
+
+    Add the following to your `variables.tf` file:
+
+```terraform
+variable "resource_group_name" {}
+variable "location" {}
+```
 
 1. Check in your changes and ensure automation deployment completes successfully
 
