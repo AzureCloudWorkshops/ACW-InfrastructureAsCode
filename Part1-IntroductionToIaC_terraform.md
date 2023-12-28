@@ -104,8 +104,41 @@ For this first activity, you'll be creating a simple storage account.  To do thi
 
 >**Note:** We may not need Azure Tools, but it's a good idea to have it in place for other things you will do in the future.
 
+First, we need to specify the providers that we will use in the deployment. Add the following code to your main.tf file:
 
-...WIP..
+```text 
+terraform {
+  required_version = ">=1.6.6"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~>3.0"      
+    }    
+  }
+}
+
+provider "azurerm" {
+  features {    
+  }
+}
+```
+
+Next, we need to add a `resource` block to create the storage account:
+
+```text 
+data "azurerm_resource_group" "stg_rg" {
+  name = "codemash-workshop-rg-sg"
+}
+
+resource "azurerm_storage_account" "cm_stg_acct" {
+  name                     = "cmstgacct"
+  resource_group_name      = data.azurerm_resource_group.stg_rg.name
+  location                 = data.azurerm_resource_group.stg_rg.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+```
 
 ## Task 2 - Create a resource group
 
@@ -115,8 +148,10 @@ Assuming that creating a resource group is straight forward in the portal, let's
 
 ### Step 1 - Get Logged in
 
+Run the following command to log in to your Azure subscription:
+
 ```text  
-Enter the command az login
+az login
 ```
 
 !["Logging into Azure"](images/Part1-terraform/azurelogin.png)  
@@ -133,21 +168,57 @@ A confirmation window will appear.
 
 ### Step 2 - Ensure your subscription
 
+Run the following command:
 
+```text  
+az account show
+```
 
-### Step 3 - Create the resource group via CLI commands
+If the account shown is not the one you want, run the following command to see all the Azure accounts you have access to:
 
-...WIP...
+```text  
+az account list
+```
+
+Copy the value in the `id` field and run the following command:
+
+```text  
+az account set --subscription {YOUR_ID}
+```
+
+Run the `az account show` command again to confirm that the right account is set.
 
 ### Completion Check
 
-You have a resource group named as you intended in your Azure subscription in the region of your choice.
+You are logged in to Azure with the appropriate subscription.
 
 ## Task 3 - Run the deployment
 
-...WIP...
+As mentioned in part 1, there are 3 commands that make up the basic Terraform workflow:
+
+- terraform init
+- terraform plan
+- terraform apply
+
+The first command only needs to be executed when creating a new configuration or updating an existing one. Running multiple times should not cause any issues.
 
 ### Step 1 - Issue commands to run the deployment
+
+Before you execute any commands, make sure that you are in the `terraform`folder
+
+!["Terraform directory."](images/Part1-terraform/terraformdirectory.png)
+
+Execute the `terraform init` command, after the command completes you should see the following:
+
+!["Terraform init results."](images/Part1-terraform/terraforminitresult.png)
+
+Next, execute the `terraform plan` command:
+
+```text  
+terraform plan -out main.tfplan
+```
+
+You should see the following output:
 
 ### Step 2 - Verify the deployment
 
