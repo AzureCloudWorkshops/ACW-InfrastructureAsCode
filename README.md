@@ -102,6 +102,12 @@ Complete the introductory module then choose one or both of the submodules for B
 
 - [Part 2 - Building the Infrastructure](Part2-BuildingTheInfrastructure.md)
 
+### Overall Architecture
+
+It will be helpful to remember the overall architecture for build order and dependencies. This diagram can be used to visualize the final solution.
+
+!["Overall Architecture"](/images/ContactWeb.drawio.png)  
+
 ### Completion Check
 
 The following resources are needed to complete this walkthrough:
@@ -112,7 +118,6 @@ The following resources are needed to complete this walkthrough:
 - App Service
 - Azure SQL Server
 - Key Vault
-- Azure App Configuration [time permitting]
 
 ## Step 3: Build CI/CD to deploy the application
 
@@ -124,6 +129,29 @@ In this step you will build out the CI/CD pipeline to deploy the application to 
 
 At the end of this step, you have a working deployment for any code changes, which deploy the application to your Azure environment.
 
+## Step 4: Azure App Configuration
+
+If there is enough remaining time, adding the Azure App Configuration to share resources is a great way to continue to learn.  This step will only require additional changes to existing deployments, so there is no common step, just pick the one that you want to work with and complete the activity
+
+Complete one of the following: 
+
+- [Part 4 - Azure App Configuration - Bicep](Part4-AzureAppConfiguration_bicep.md)  
+
+- or - 
+
+- [Part 4 - Azure App Configuration - Terraform](Part4-AzureAppConfiguration_terraform.md)  
+
+### Completion Check
+
+At the end of this step, you have added Azure App Configuration and reconfigured the code to leverage the configuration instead of the KeyVault.  
+
+In addition to the resources in part 2, you should have the following resources:
+- Azure App Configuration
+
 ## Conclusion
 
-In this walkthrough, you learned how to protect your secrets in your code, and how to use Azure App Configuration and Azure Key Vault to store and manage your secrets, and you examined a way to ensure that secrets are not accidentally published to GitHub or your application logs.
+In this walkthrough, you learned how to work with IaC using Bicep and/or Terraform.  You then learned how to automate the deployment of your IaC pipeline to ensure your architecture is built consistently at Azure.
+
+You completed the circle by learning how to build a CI/CD pipeline to deploy the application to Azure.  
+
+You should now feel confident that you have the understanding and skills to build out IaC and CI/CD pipelines for your own applications.
