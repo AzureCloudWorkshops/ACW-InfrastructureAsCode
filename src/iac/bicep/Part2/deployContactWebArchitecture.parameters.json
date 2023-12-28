@@ -31,6 +31,15 @@
         },
         "appInsightsName": {
             "value": "contactWebAppInsights"
+        },
+        "appServicePlanName": {
+            "value": "contactWebASP"
+        },
+        "appServicePlanSku": {
+            "value": "F1"
+        },
+        "webAppName": {
+            "value": "ContactWeb"
         }
     }
 }

@@ -18,6 +18,10 @@ param clientIPAddress string
 param logAnalyticsWorkspaceName string
 param appInsightsName string
 
+param webAppName string
+param appServicePlanName string
+param appServicePlanSku string
+
 resource contactWebResourceGroup 'Microsoft.Resources/resourceGroups@2018-05-01' = {
   name: rgName
   location: location
@@ -55,3 +59,17 @@ module contactWebApplicationInsights 'applicationInsights.bicep' = {
     logAnalyticsWorkspaceId: contactWebAnalyticsWorkspace.outputs.logAnalyticsWorkspaceId
   }
 }
+
+module contactWebApplicationPlanAndSite 'contactWebAppService.bicep' = {
+  name: '${webAppName}-deployment'
+  scope: contactWebResourceGroup
+  params: {
+    location: contactWebResourceGroup.location
+    uniqueIdentifier: uniqueIdentifier
+    appInsightsName: appInsightsName
+    appServicePlanName: appServicePlanName
+    appServicePlanSku: appServicePlanSku
+    webAppName: webAppName
+  }
+}
+
