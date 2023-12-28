@@ -254,8 +254,8 @@ env:
   AZURE_TENANT_ID:  ${{ secrets.AZURE_TENANT_ID }}
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   AZURE_CLIENT_ID_CONTACTWEB_DEV: '${{ secrets.AZURE_CLIENT_ID_CONTACTWEB_DEV }}'
-  TEMPLATE: 'iac/main.bicep'
-  PARAMETERS: 'iac/main.parameters.json'  
+  TEMPLATE: 'iac/deployContactWebArchitecture.bicep'
+  PARAMETERS: 'iac/deployContactWebArchitecture.parameters.json'  
   DEPLOYMENT_NAME: 'BicepDeployResources'
   REGION: 'eastus'
   
@@ -427,9 +427,11 @@ jobs:
       working-directory: ${{ github.workspace }}/iac
 ```
 
-    >**Note:** You don't currently have a `main.bicep` or `main.tf` file so the first run should fail for bad file paths.  You will create these files in the next task.
+//TODO: Terraform above does not work and not sure what this will look like for tf users...
 
-1. Even though the run failed, validate login was successful
+    >**Note:** If doing bicep, you don't currently have a `deployContactWebArchitecture.bicep` file so you'll get a failure.  For Terraform if you had a working *.tf file you may have succeeded here. not sure yet.
+
+1. For Bicep: Even though the run failed, validate login was successful
 
     Before moving forward, you should have a successful login in your workflow.  If that did not work, then you need to make sure the three secrets are correct and that you ran from the main branch or with the `dev` environment credential (both should have been the case - you were likely on your main branch and you put the `dev` environment variable in if you copied the code above).
 
