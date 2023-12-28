@@ -102,6 +102,12 @@ Complete the introductory module then choose one or both of the submodules for B
 
 - [Part 2 - Building the Infrastructure](Part2-BuildingTheInfrastructure.md)
 
+### Overall Architecture
+
+It will be helpful to remember the overall architecture for build order and dependencies. This diagram can be used to visualize the final solution.
+
+!["Overall Architecture"](/images/ContactWeb.drawio.png)  
+
 ### Completion Check
 
 The following resources are needed to complete this walkthrough:
