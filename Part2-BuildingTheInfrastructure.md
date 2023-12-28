@@ -556,6 +556,29 @@ variable "location" {}
 
 Do not move forward if you do not have a working IaC pipeline that executes a subscription-level deployment using your service principal credentials in your Azure subscription.  You should have a main file for deployment orchestration and it should ensure that the resource group exists in your subscription.  If you do not have this, you will not be able to complete the rest of this workshop/walkthrough.
 
+
+## One last piece of information
+
+There is a trick that you can use when trying to deploy resources to Azure that you need to be aware of.  For example, suppose that you want to deploy an app service with a bunch of configuration settings.  If you are unsure how to get started, go to the portal and actually deploy the app service.  Once you have it deployed, on the left-hand side of the app service, click `Export Template`
+
+!["Export Template"](images/Part2-common/image0026-exportTemplate.png)  
+
+Download and save the template
+
+!["Download Template"](images/Part2-common/image0027-downloadTemplate.png)  
+
+Then use the Azure tools to convert it to bicep.  You can also use this to get the parameters file as well.  This is a great way to get started with a resource that you are unsure how to deploy.
+
+To convert to bicep
+
+```bash
+az bicep decompile --file template.json
+```
+
+### NubesGen.com
+
+Another great tool that can help you get started is [NubesGen.com](https://nubesgen.com/) which is a resource that lets you quickly generate terraform files for an Azure Deployment.
+
 ## Breakouts
 
 With the deployment pipeline in place, complete the following part(s) of the workshop that you would like to learn about:
