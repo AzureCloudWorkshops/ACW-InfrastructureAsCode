@@ -68,3 +68,5 @@ resource sqlDB 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
     requestedBackupStorageRedundancy: 'local'
   }
 }
+
+output sqlServerName string = sqlServer.name

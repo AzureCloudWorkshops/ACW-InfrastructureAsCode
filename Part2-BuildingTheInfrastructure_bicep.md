@@ -109,6 +109,8 @@ resource sqlDB 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
     requestedBackupStorageRedundancy: 'local'
   }
 }
+
+output sqlServerName string = sqlServer.name
 ```  
 
 >**Note**: As a reminder, all source files can be found in case something is not working as expected from this walkthrough..
@@ -540,6 +542,8 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
     httpsOnly: true
   }
 }
+
+output webAppFullName string = webApp.name
 ```
 
 ### Step 2 - Create the parameters file
@@ -630,16 +634,233 @@ param appServicePlanSku string
 
     Navigate back to the resource group and review the resources.
 
-    !["App Service"](images/Part2-bicep/image0008-appService.png)
+    !["Resources Exist in the resource group"](images/Part2-bicep/image0008-contactWebAppServiceRG.png)  
 
 1. Ensure the web app is created:
 
+    Review the App Service Plan for free tier:
+
+    !["App Service Plan Free Sku"](images/Part2-bicep/image0009-contactWebAppServicePlan.png)  
+
+    Review the App Service for settings:
+
+    !["App Service Configuration Settings"](images/Part2-bicep/image0010-appServiceConfigurationSet.png)    
 
 ## Task 4 - Key vault
 
-1. Get the managed identity from app service into policy
-1. Get the connection string from the database as a secret
-1. Create the vault with the secret and permissions
+In this task you will create the key vault and add the secrets for the database connection strings.  Additionally, you will add the identity from the web app to the key vault so that it can access the secrets.
+
+When that is completed, you need to update the web application to use the key vault for the connection strings by updating the configuration value for the KeyVault Secret Uri.
+
+### Step 1 - Create the Key Vault  
+
+Create the Key Vault.  You need to get the following accomplished with the deployment:  
+
+- Get the managed identity from app service into policy for get secrets (need list if using code access)
+- Get the connection string from the database as a secret
+- Create the vault with the two secrets and identity permission for the web app
+
+1. Create a new file for the key vault
+
+    Create a new file in the `iac` folder called 
+
+    ```bash
+    keyVault.bicep
+    ```  
+
+1. Add the following to the file:
+
+```bicep 
+param location string
+@description('Provide a unique datetime and initials string to make your instances unique. Use only lower case letters and numbers')
+@minLength(11)
+@maxLength(11)
+param uniqueIdentifier string 
+
+@minLength(10)
+@maxLength(13)
+param keyVaultName string
+
+param webAppFullName string
+param databaseServerName string
+param sqlDatabaseName string
+@secure()
+param sqlServerAdminPassword string
+
+var vaultName = '${keyVaultName}${uniqueIdentifier}'
+var skuName = 'standard'
+var softDeleteRetentionInDays = 7
+
+resource webApp 'Microsoft.Web/sites@2023-01-01' existing = {
+  name: webAppFullName
+}
+
+resource databaseServer 'Microsoft.Sql/servers@2023-05-01-preview' existing = {
+  name: databaseServerName
+}
+
+resource keyVault 'Microsoft.KeyVault/vaults@2022-07-01' = {
+  name: vaultName
+  location: location
+  properties: {
+    enabledForDeployment: true
+    enabledForDiskEncryption: false
+    enabledForTemplateDeployment: true
+    tenantId: subscription().tenantId
+    enableSoftDelete: true
+    softDeleteRetentionInDays: softDeleteRetentionInDays
+    sku: {
+      name: skuName
+      family: 'A'
+    }
+    accessPolicies: [
+      {
+        tenantId: subscription().tenantId
+        objectId: webApp.identity.principalId
+        permissions: {
+          keys: []
+          secrets: ['Get']
+          certificates: []
+        }
+      }
+    ]
+    networkAcls: {
+      defaultAction: 'Allow'
+      bypass: 'AzureServices'
+    }
+  }
+}
+
+resource identityDBConnectionSecret 'Microsoft.KeyVault/vaults/secrets@2022-11-01' = {
+  name: 'IdentityDbConnectionSecret'
+  parent: keyVault
+  properties: {
+    value: 'Server=tcp:${databaseServer.name}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${sqlDatabaseName};Persist Security Info=False;User ID=${databaseServer.properties.administratorLogin};Password=${sqlServerAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+  }
+}
+
+resource contactManagerDBConnectionSecret 'Microsoft.KeyVault/vaults/secrets@2022-11-01' = {
+  name: 'ContactManagerDbConnectionSecret'
+  parent: keyVault
+  properties: {
+    value: 'Server=tcp:${databaseServer.name}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${sqlDatabaseName};Persist Security Info=False;User ID=${databaseServer.properties.administratorLogin};Password=${sqlServerAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
+  }
+}
+
+output keyVaultName string = keyVault.name
+output identityDBConnectionSecretURI string = identityDBConnectionSecret.properties.secretUri
+output contactManagerDBConnectionSecretURI string = contactManagerDBConnectionSecret.properties.secretUri
+```
+
+### Step 2 - Create the parameters file
+
+Create the parameters file.
+
+1. Add a parameters file for the key vault
+
+    Create a new file in the `iac` folder called 
+
+    ```bash
+    keyVault.parameters.json
+    ```
+
+1. Add the following text to the parameters file.   
+    
+```json
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "eastus"
+        },
+        "uniqueIdentifier": {
+            "value": "20291231acw"
+        },
+        "keyVaultName": {
+            "value": "KV-ContactWeb"
+        },
+        "databaseServerName": {
+            "value": "ContactWebDBServer20291231acw"
+        },
+        "webAppName": {
+            "value": "ContactWeb-20291231acw"
+        },
+        "sqlDatabaseName": {
+            "value": "ContactWebDB"
+        },
+        "sqlServerAdminPassword": {
+            "value": "workshopDbPwd#54321!"
+        }
+    }
+}
+```
+
+### Step 3 - Deploy 
+
+Add the parameters and bicep module to the main deployment files
+
+1. Add the deployment to the main deployment file
+
+    Add the following to the main deployment file:
+
+```bicep
+module contactWebVault 'keyVault.bicep' = {
+  name: '${keyVaultName}-deployment'
+  scope: contactWebResourceGroup
+  params: {
+    location: contactWebResourceGroup.location
+    uniqueIdentifier: uniqueIdentifier
+    webAppFullName: contactWebApplicationPlanAndSite.outputs.webAppFullName
+    databaseServerName: contactWebDatabase.outputs.sqlServerName
+    keyVaultName: keyVaultName
+    sqlDatabaseName: sqlDatabaseName
+    sqlServerAdminPassword: sqlServerAdminPassword
+  }
+}
+```
+
+And add the missing parameters to the top of the file:
+
+```bicep
+param keyVaultName string
+```
+
+1. Add the parameters to the parameters file (don't forget the comma):
+
+```json
+        "keyVaultName": {
+            "value": "KV-ContactWeb"
+        }
+```
+
+1. Validate the deployment of the vault
+
+    The vault should deploy as required.
+
+    !["Vault is deployed"](images/Part2-bicep/image0011-keyVaultCreated.png)  
+
+1. Verify access policies (make sure web app is authorized)
+
+    Validate that the Web App has access to get secrets from the Key Vault
+
+    !["Vault Access Policies"](images/Part2-bicep/image0012-accessPolicyInPlace.png)  
+
+1. Verify secrets (need to add your credential)
+
+    Modify the access policies to allow your user to view the secrets.  You can do this by adding your user to the access policies and giving it the `Get` and `List` permission (or just check them all since it's you).  Then you can view the secrets.
+
+    Open the secrets and validate they have the correct value as expected.
+
+    !["Secrets are set as expected"](images/Part2-bicep/image0013-secretsSet.png)
+
+
+
+### Step 4: Update the web app to use the key vault for the connection strings
+
+With the vault deployed and the secrets in place, you need to update the web app to use the key vault for the connection strings.
+
+
 
 ## Completion Check
 

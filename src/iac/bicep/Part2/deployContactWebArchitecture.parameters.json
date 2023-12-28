@@ -24,7 +24,7 @@
             "value": "workshopDbPwd#54321!"
         },
         "clientIPAddress": {
-            "value": "10.10.10.10"
+            "value": "169.197.65.186"
         },
         "logAnalyticsWorkspaceName": {
             "value": "contactWebAnalytics"
@@ -40,6 +40,9 @@
         },
         "webAppName": {
             "value": "ContactWeb"
+        },
+        "keyVaultName": {
+            "value": "KV-ContactWeb"
         }
     }
 }
