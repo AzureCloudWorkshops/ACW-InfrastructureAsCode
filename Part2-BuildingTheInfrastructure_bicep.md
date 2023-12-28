@@ -6,6 +6,8 @@ As a reminder, this is the architecture we are building.  By completing the `Par
 
 !["Overall Architecture"](images/ContactWeb.drawio.png)
 
+>*Note*: The Azure App Configuration will be added in Part 4 if there is enough time to complete the activities.
+
 ## Task 1 - Deploy Azure SQL Server
 
 1. create the server and database
