@@ -296,7 +296,49 @@ jobs:
 Terraform:  
 
 ```yaml
+name: "Terraform Deploy Resources"
 
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env: 
+  CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }} 
+  AZURE_TENANT_ID:  ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_CLIENT_ID_CONTACTWEB_DEV: '${{ secrets.AZURE_CLIENT_ID_CONTACTWEB_DEV }}'
+  TEMPLATE: 'iac/main.tf'
+  PARAMETERS: 'iac/main.tfvars'  
+  DEPLOYMENT_NAME: 'TerraformDeployResources'
+  REGION: 'eastus'
+  
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  dev-deploy:
+    name: Dev Deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: 'dev'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v1.4.6
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID_CONTACTWEB_DEV }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Terraform Stuff Goes here
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
 ```
 
     >**Note:** You don't currently have a `main.bicep` or `main.tf` file so the first run should fail for bad file paths.  You will create these files in the next task.
