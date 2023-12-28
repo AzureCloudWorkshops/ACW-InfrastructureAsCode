@@ -180,6 +180,50 @@ With the Azure credentials in place, it's time to get the GitHub Actions set up 
 
 Once this is completed, you will be able to check in code changes and rely on the automation to run your templates (no longer needing to be logged in and run from your command line).  
 
+1. Navigate to your GitHub repository
+
+    Navigate to your GitHub repository where you have your code for the contact web application.
+
+1. Select `Settings` at the top of the repository.
+
+    !["Settings"](images/Part2-common/image0015-githubsettings.png)
+
+1. Select `Secrets and variables`, then `Actions`, then hit the `New Repository secret` on the left side of the screen.
+
+    !["Secrets and variables + Actions - new secret"](images/Part2-common/image0016-newsecret.png)  
+
+1. Enter three secrets
+
+    Secret one:  
+
+    - Secret name: `AZURE_SUBSCRIPTION_ID`
+    - Value: `<your azure subscription id>`  
+
+    Secret two:
+
+    - Secret name: `AZURE_CLIENT_ID_CONTACTWEB_DEV`
+    - Value: `<your service client id>`    
+
+    Secret three:
+
+    - Secret name: `AZURE_TENANT_ID`
+    - Value: `<your tenant id>`
+
+    >**Note:** Your subscription ID can be easily obtained from almost any resource or by running the cli command `az account show` (field: `id`) If you run `az account show` you will also get your Tenant Id (field: `tenantId` not `homeTenantId` which could be different).  Your tenant and client id's can be obtained from the overview screen of your app registration in the portal and you likely copied them earlier in this workshop.  You can also get your subscription ID from the portal -> Subscriptions -> overview blade.
+
+    !["Client ID"](images/Part2-common/image0017-clientid1.png)
+
+    !["Client ID and Tenant ID"](images/Part2-common/image0018_clientId2tenantid.png)  
+
+    !["Subscription ID"](images/Part2-common/image0019-SubscriptionId.png)  
+
+1. Validate that you have the three secrets ready to go.
+
+    You won't be able to see the values so if you have problems you may just need to come back here later and update the values in case something didn't copy/paste correctly.
+
+    You can validate that the three secrets are in place, however:
+
+    !["Repository Secrets"](images/Part2-common/image0020-reposecrets.png)  
 
 
 ## Task 3 - Create the automation action to execute the deployment
