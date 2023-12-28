@@ -225,8 +225,144 @@ Once this is completed, you will be able to check in code changes and rely on th
 
     !["Repository Secrets"](images/Part2-common/image0020-reposecrets.png)  
 
+## Completion check
+
+Do not move forward until you have a service principal with the correct permissions to deploy to your subscription and you have the three secrets in place in your GitHub repository as you will not be able to complete the rest of this workshop/walkthrough without these in place.
 
 ## Task 3 - Create the automation action to execute the deployment
+
+With everything in place to deploy, it's time to get the automation in place to execute the deployment.  This will be done via GitHub Actions.  Since the choice exists to do this with either bicep or terraform, this walkthrough will show how to do this with both.  The only part that will be different is the deployment action and the actual files used for deployment.  The rest of the workflow will generally be the same.
+
+1. Navigate to the `Actions` tab of your repository and select `set up a workflow yourself`.
+
+    !["Actions -> Set up a workflow yourself"](images/Part2-common/image0021-actionworkflow.png)  
+
+1. Use the appropriate following yaml file for your deployment type.
+
+    Bicep:  
+
+```yaml
+name: "Bicep Deploy Resources"
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env: 
+  CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }} 
+  AZURE_TENANT_ID:  ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_CLIENT_ID_CONTACTWEB_DEV: '${{ secrets.AZURE_CLIENT_ID_CONTACTWEB_DEV }}'
+  TEMPLATE: 'iac/main.bicep'
+  PARAMETERS: 'iac/main.parameters.json'  
+  DEPLOYMENT_NAME: 'BicepDeployResources'
+  REGION: 'eastus'
+  
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  dev-deploy:
+    name: Dev Deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: 'dev'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v1.4.6
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID_CONTACTWEB_DEV }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy Resources
+        uses: Azure/arm-deploy@v1.0.9
+        with:
+          scope: subscription
+          subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
+          region: ${{ env.REGION }}
+          template: '${{ env.TEMPLATE }}'
+          parameters: '${{ env.PARAMETERS }}'
+          deploymentName: '${{env.DEPLOYMENT_NAME}}-${{github.run_number}}'
+          failOnStdErr: true
+```
+
+Terraform:  
+
+```yaml
+
+```
+
+    >**Note:** You don't currently have a `main.bicep` or `main.tf` file so the first run should fail for bad file paths.  You will create these files in the next task.
+
+1. Even though the run failed, validate login was successful
+
+    Before moving forward, you should have a successful login in your workflow.  If that did not work, then you need to make sure the three secrets are correct and that you ran from the main branch or with the `dev` environment credential (both should have been the case - you were likely on your main branch and you put the `dev` environment variable in if you copied the code above).
+
+    !["No file but login was successful"](images/Part2-common/image0022-loginsuccessjustneedfilebicep.png)  
+
+1. Add appropriate infrastructure file(s) to your repo.
+
+    For Bicep:  
+
+    - Create a file called `main.bicep` in the `iac` folder of your repo.
+    - Create a file called `main.parameters.json` in the `iac` folder of your repo.
+
+    Add the following code to your `main.bicep` file (this should look really familiar, as it's just creating the resource group for now):
+
+    ```bicep
+    targetScope = 'subscription'
+
+    param rgName string
+    param location string
+
+    resource iacTrainingResourceGroup 'Microsoft.Resources/resourceGroups@2018-05-01' = {
+      name: rgName
+      location: location
+    }
+    ```
+
+    Add the following to your `main.parameters.json` file:
+
+    ```json
+    {
+        "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+        "contentVersion": "1.0.0.0",
+        "parameters": {
+            "rgName": {
+                "value": "iac-training-rg"
+            },
+            "location": {
+                "value": "eastus"
+            }
+        }
+    }
+    ```  
+
+    For Terraform:  
+
+    - Create a file called `main.tf` in the `iac` folder of your repo.
+    - Create a file called `main.tfvars` in the `iac` folder of your repo.
+
+    Add the following code to your `main.tf` file (this should look really familiar, as it's just creating the resource group for now):
+
+    ```terraform  
+    ```  
+
+    Add the following to your `main.tfvars` file:
+
+    ```terraform  
+    ```   
+
+1. Check in your changes and validate deployment.
+
+    You should now see the deployment work as expected, and your action should run to completion and create/ensure the resource group exists as expected.
 
 ## Completion check
 
