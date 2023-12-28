@@ -39,7 +39,7 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
       appSettings: [
           {
             name: 'APPINSIGHTS:CONNECTIONSTRING'
-            value: applicationInsights.properties.InstrumentationKey
+            value: applicationInsights.properties.ConnectionString
           }
           {
             name: 'ConnectionStrings:DefaultConnection'

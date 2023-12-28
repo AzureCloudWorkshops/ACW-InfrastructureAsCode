@@ -523,7 +523,7 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
       appSettings: [
           {
             name: 'APPINSIGHTS:CONNECTIONSTRING'
-            value: applicationInsights.properties.InstrumentationKey
+            value: applicationInsights.properties.ConnectionString
           }
           {
             name: 'ConnectionStrings:DefaultConnection'
@@ -634,7 +634,7 @@ param appServicePlanSku string
 
 1. Ensure the web app is created:
 
-    
+
 ## Task 4 - Key vault
 
 1. Get the managed identity from app service into policy
@@ -652,7 +652,7 @@ At the end of this step, you should have the following resources:
 - App Service Plan
     - F1 Tier for free deployment
 - App Service
-    - leverages application insights instrumanation key/connection string
+    - leverages application insights instrumentation key/connection string
 - Azure SQL Server
     - basic tier ($5/month)
 - Key Vault
