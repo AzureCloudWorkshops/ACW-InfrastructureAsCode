@@ -8,6 +8,10 @@ As a reminder, this is the architecture we are building.  By completing the `Par
 
 >*Note*: The Azure App Configuration will be added in Part 4 if there is enough time to complete the activities.
 
+## Prerequisites
+
+You will need to have completed both Part 1 of this walkthrough and also the common [Building The Infrastructure](Part2-BuildingTheInfrastructure.md) walkthrough before starting this walkthrough.  If you do not already have a GitHub action that is deploying to Azure at the subscription level and creating a resource group, you will not be able to complete this walkthrough.
+
 ## Task 1 - Deploy Azure SQL Server
 
 1. create the server and database
