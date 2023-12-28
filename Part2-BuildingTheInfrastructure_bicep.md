@@ -850,15 +850,17 @@ param keyVaultName string
 
     Modify the access policies to allow your user to view the secrets.  You can do this by adding your user to the access policies and giving it the `Get` and `List` permission (or just check them all since it's you).  Then you can view the secrets.
 
+    !["Create Vault Policies 1"](images/Part2-bicep/image0013-accessPoliciesCreate1.png)  
+    !["Create Vault Policies 2"](images/Part2-bicep/image0014-accesspoliciescreate2.png)  
+    !["Create Vault Policies 3"](images/Part2-bicep/image0015-createAccessPolicy3.png)  
+
     Open the secrets and validate they have the correct value as expected.
 
-    !["Secrets are set as expected"](images/Part2-bicep/image0013-secretsSet.png)
-
-
+    !["Secrets are set as expected"](images/Part2-bicep/image0016-secretsAreSet.png)  
 
 ### Step 4: Update the web app to use the key vault for the connection strings
 
-With the vault deployed and the secrets in place, you need to update the web app to use the key vault for the connection strings.
+With the vault deployed and the secrets in place, you need to complete the deployment by updating the web app to use the key vault for the connection strings.
 
 
 
