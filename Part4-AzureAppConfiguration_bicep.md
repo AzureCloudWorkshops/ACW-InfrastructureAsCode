@@ -237,38 +237,342 @@ module contactWebVault 'keyVault.bicep' = {
 1. Validate Key Vault access permissions include the UMI, the web app, and your user group as expected.
 
     !["Key Vault permissions"](images/Part4-bicep/image0003-kvaccesspolicies.png)  
-    
+
 ## Task 2 - Create an App Configuration instance
 
 In this task, you'll create an app configuration with references to the Key Vault secrets for the two database connections.  You could do additional shared settings here as well that wouldn't have to be key vault secrets, but could just be setting key-value pairs.  For this training, we're just doing the two database connections.
 
 ### Step 1 - Create the bicep
 
+In this step, you will create the bicep to create the App Configuration instance. The instance will need to make sure to have the following:  
+
 - App configuration with Identity
-- Permission to get secrets from Key vault
 - Two KeyVault references to the Key Vault secrets
 
-### Step 2 - Create the params
+1. Create the bicep file.
 
-### Step 3 - modify the main deployment
+    Create a new file called `appConfigStore.bicep` and add the following:
 
-### Step 4 - Validate the deployment
+```bicep
+param location string 
+@minLength(11)
+@maxLength(11)
+param uniqueIdentifier string 
+@minLength(5)
+@maxLength(12)
+param appConfigStoreName string 
+param identityDBConnectionStringKey string
+param managerDBConnectionStringKey string 
+param identityDbSecretURI string
+param managerDbSecretURI string
+param keyVaultUserManagedIdentityName string
+
+var configName = '${appConfigStoreName}-${uniqueIdentifier}'
+
+resource keyVaultUser 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
+  name: keyVaultUserManagedIdentityName
+}
+
+resource appConfig 'Microsoft.AppConfiguration/configurationStores@2023-03-01' = {
+  name: configName
+  location: location
+  sku: {
+    name: 'free'
+  }
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${keyVaultUser.id}': {}
+    }
+  }
+  properties: {
+    encryption: {}
+    disableLocalAuth: false
+    softDeleteRetentionInDays: 0
+    enablePurgeProtection: false
+  }
+}
+
+resource identityDBConnectionKeyValuePair 'Microsoft.AppConfiguration/configurationStores/keyValues@2023-03-01' = {
+  name: identityDBConnectionStringKey
+  parent: appConfig
+  properties: {
+    contentType: 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
+    value: string('${identityDbSecretURI}')
+  }
+}
+
+resource managerDBConnectionKeyValuePair 'Microsoft.AppConfiguration/configurationStores/keyValues@2023-03-01' = {
+  name: managerDBConnectionStringKey
+  parent: appConfig
+  properties: {
+    contentType: 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
+    value: string('${managerDbSecretURI}')
+  }
+}
+
+output appConfigStoreName string = appConfig.name
+output appConfigStoreEndpoint string = appConfig.properties.endpoint
+
+```  
+
+This allows you to create the App Configuration instance with the Key Vault references to the secrets.  The App Configuration instance will have a user managed identity that will be used to access the Key Vault secrets.  You will get the user managed identity from the name of the user managed identity that was created in the Key Vault bicep.
+
+### Step 2 - Create the parameters file
+
+Add a new parameters file called `appConfigStore.parameters.json` and add the following:
+
+```json
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "eastus"
+        },
+        "uniqueIdentifier": {
+            "value": "20291231acw"
+        },
+        "appConfigStoreName": {
+            "value": "orgAppConfig"
+        },
+        "identityDBConnectionStringKey": {
+            "value": "passedinfrommain"
+        },
+        "managerDBConnectionStringKey": {
+            "value": "passedinfrommain"
+        },
+        "identityDbSecretURI": {
+            "value": "passedinfrommain"
+        },
+        "managerDbSecretURI" : {
+            "value": "passedinfrommain"
+        }
+    }
+}
+```
+
+    Note that most of the values are passed in for this to work correctly, so if you wanted to run this separately you would need to find and configure the correct values for those settings.
+
+### Step 3 - Modify the main deployment
+
+In this step, you will modify the main deployment to include the App Configuration bicep.
+
+1. Modify the main bicep to include a call to the App Configuration bicep
+
+    Add the following to the params for the main deployment:
+
+```bicep
+module orgAppConfiguration 'appConfigStore.bicep' = {
+  name: '${appConfigStoreName}-deployment'
+  scope: contactWebResourceGroup
+  params: {
+    location: contactWebResourceGroup.location
+    uniqueIdentifier: uniqueIdentifier
+    appConfigStoreName: appConfigStoreName
+    identityDBConnectionStringKey: identityDBConnectionStringKey
+    managerDBConnectionStringKey: managerDBConnectionStringKey
+    identityDbSecretURI: contactWebVault.outputs.identityDBConnectionSecretURI
+    managerDbSecretURI: contactWebVault.outputs.managerDBConnectionSecretURI
+    keyVaultUserManagedIdentityName: contactWebVault.outputs.keyVaultUserManagedIdentityName
+  }
+}
+```
+
+    Notice a number of the parameters are passed in from the Key Vault bicep.  Additionally, the configuration setting keys are necessary for the app configuration to be able to get to the key vault secrets.  The only real new variable here is the name of the app configuration.
+
+    Don't forget to add the new parameters to the main deployment parameters file.  
+
+```bicep
+@minLength(5)
+@maxLength(12)
+param appConfigStoreName string
+```  
+
+    Add the following to the parameters file:
+
+```json
+        "appConfigStoreName": {
+            "value": "orgAppConfig"
+        }
+```
+
+    This will be the name of the App Configuration instance.
+
+
+### Step 4 - Deploy and Validate
+
+Push your changes and validate the deployment.
+
+1. Validate the app configuration is created
+
+    !["App Configuration"](images/Part4-bicep/image0005-appconfigcreated.png)  
+
+1. Validate the two secrets are in place on the Configuration Explorer
+
+    !["Two Secrets are in place as expected"](images/Part4-bicep/image0006-twoSecretsInPlace.png)  
 
 ## Task 3 - Reset the App Service to use the App Configuration and no longer directly reference the Key Vault
 
+There are a number of things that you could do at this point.  One of them is that you could go back and remove the update/merge from previous work and you could just add the app config settings from the start of the creation of the web app.  As this is an organic feel of moving through iterations, and for simplicity, I've chosen to just create another settings update.  This time, you will reset the App configuration settings to only have the Application Insights connection string and the new endpoint URL from the previous step for the App Configuration.
+
 ### Step 1 - Create the reset bicep
-- update the settings for the App Service to use the App Configuration URL
-### Step 2 - Add to the deployment  
+
+The settings will not let you pass an empty object, so for this you will create a new file for reset and you will make the current settings with only the application insights connection string, and then you'll merge that with the new setting for the app configuration endpoint.
+
+1. Create a new file called `contactWebAppServiceSettingsResetForAppConfiguration.bicep` and add the following:
+
+```bicep
+param webAppName string
+param appConfigurationEndpointKey string 
+param appConfigurationEndpointValue string 
+param applicationInsightsConnectionStringKey string 
+param applicationInsightsName string
+
+resource webApp 'Microsoft.Web/sites@2023-01-01' existing = {
+  name: webAppName
+}
+
+resource appInsights 'Microsoft.Insights/components@2020-02-02-preview' existing = {
+  name: applicationInsightsName
+}
+
+//reset the current app settings with the new app settings WARNING: Wipes out everything that isn't explicitly set in the appSettings object
+module resetAppConfigurationSettings 'contactWebAppServiceSettingsMerge.bicep' = {
+  name: 'webAppSettings-${webAppName}'
+  params: {
+    currentAppSettings: { '${applicationInsightsConnectionStringKey}': appInsights.properties.ConnectionString }
+    appSettings: {
+      '${appConfigurationEndpointKey}' : appConfigurationEndpointValue
+    }
+    webAppName: webApp.name
+  }
+}
+```
+
+The file needs the web app and the app insights to get the objects, then merges values with the keys as appropriate, additionally, the new app configuration endpoint value must be passed in.
+
+>**Note**: For this step I've chosen not to include a parameters file.  You could do that, but it's not necessary for this step.
+
+### Step 2 - Add to the main deployment  
+
+Add the reset task to the main deployment.
+
+1. Add the following to the main deployment:
+
+```bicep
+module resetContactWebAppSettingsForAppConfiguration 'contactWebAppServiceSettingsResetForAppConfiguration.bicep' = {
+  name: '${webAppName}-resettingAppSettingsForAppConfiguration'
+  scope: contactWebResourceGroup
+  params: {
+    webAppName: contactWebApplicationPlanAndSite.outputs.webAppFullName
+    appConfigurationEndpointKey: appConfigurationEndpointKey
+    appConfigurationEndpointValue: orgAppConfiguration.outputs.appConfigStoreEndpoint
+    applicationInsightsConnectionStringKey: appInsightsConnectionStringKey
+    applicationInsightsName: contactWebApplicationInsights.outputs.applicationInsightsName
+  }
+}
+```
+
+    note the new parameter for the application insights connection string key.  This will map directly to the value the code is expecting to find `AzureAppConfigConnection`:
+
+    !["Existing code shown to validate the new parameter value will need to match exactly"](images/Part4-bicep/image0007-codeExpectsAzureAppConfiguration.png)  
+
+    >**Note:** Running the code locally requires the app config connection string and a modification to the app settings.  The App Service, however, can run from Azure with these settings in place.
+
+1. Add the new parameter in the main bicep
+
+```bicep
+@minLength(5)
+@maxLength(12)
+param appConfigStoreName string
+param appConfigurationEndpointKey string
+```
+
+1. Add the parameters to the main deployment parameters file
+
+```json
+        "appConfigurationEndpointKey": { 
+            "value": "AzureAppConfigConnection"
+        }
+```
 
 ### Step 3 - Deploy and Validate
 
->**Note**: the Application gets a 500.3 error.  This is because the code needs to be modified to leverage app Configuration.  We'll do that in the next Task.
+Push your changes and validate the deployment.
+
+1. The App Service Settings should now only have the Application Insights connection string and the App Configuration endpoint.
+
+    !["App Service Settings"](images/Part4-bicep/image0008-settingsUpdated.png)  
+
+    >**Note**: the Application gets a 500.3 error.  This is because the code needs to be modified to leverage app Configuration.  We'll do that in the next Task.
+
+    !["App Is Broken - 500.3 error"](images/Part4-bicep/image0009-AppIsBroken.png)  
+
 
 ## Task 4 - Modify the code to leverage the App Configuration
 
+In this task, you'll modify the solution code to work against the App Configuration instead of the Key Vault directly.  
+
+1. Get the app working locally (optional)
+
+    You can get the app working locally by adding the app configuration connection string to your local settings.  You can get the connection string from the App Configuration instance in the portal.
+
+    !["App Configuration Connection String"](images/Part4-bicep/image0010-appConfigConnectionString.png)  
+
+    Add the connection string to your local settings and run the app locally.  You should be able to see the app working locally.
+
+    !["App Working Locally"](images/Part4-bicep/image0011-appconfigurationconnectionstringsecret.png)  
+
+
 ### Step 1 - Modify the code
 
+1. Modify the code to leverage the App Configuration
+
+    Remove the comments to allow the code in lines 66-84 to execute.
+
+    !["Code Comments removed"](images/Part4-bicep/image0012-codeupdated.png)  
+
+    >**Note that the code is now using the App Configuration to get the connection string for the database.  In order for this to work locally, you will need to have access to key vault (even if the app config does, you don't from your local machine).  
+
+    Notice at Azure, the `ManagedIdentityCredential` is used to allow authorization to resources like Key Vault.
+
+    To toggle the `DefaultAzureCredential` for your local machine (you don't have a managed identity), add a setting to your local settings called `Application:Environment` and set it to `develop`.  This will allow you to use the `DefaultAzureCredential` to get the connection string from the Key Vault.
+
+1. Move the code to be created prior to trying to leverage the secrets
+
+    Cut the code and move it to the top of the file, right after line 12's `var builder = WebApplication.CreateBuilder(args);` and before the line:
+
+    `var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");`
+
+    If you don't do this, you will get an error because the configuration is not yet set up and the connection string will be null.
+
+    !["Code moved"](images/Part4-bicep/image0013-updatedProgram.cs.png)  
+    
+
+1. Comment out any references to connection strings in your `appsettings.json`.
+
+    !["Local settings commented out"](images/Part4-bicep/image0014-nolocalsettings.png)  
+
+1. Run the application locally (it will be hitting your azure db so if you don't have ip allowed on the db you may also get an error for the database).
+
+    !["App is working locally"](images/Part4-bicep/image0015-workinglocallyagainstazuredb.png)  
+
+    Run the application locally and validate that it works.  If you get a 500.3 error, make sure you check the database firewall settings and add your local IP.
+
+    !["Server Firewall Settings"](images/Part4-bicep/image0016-dbRestrictions.png)  
+
 ### Step 2 - Deploy and Validate
+
+Push your changes and validate the deployment.
+
+1. Make sure you have updated the application code as expected and push your changes to the repo.
+
+    This will run the final deployment where all the architecture and your application are in place.
+
+1. Validate the application is working as expected.
+
+    !["App is working in Azure"](images/Part4-bicep/image0017-workinginazure.png)
 
 ## Completion
 
