@@ -1,0 +1,50 @@
+name: Build and deploy ContactWeb
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  APP_PACKAGE_PATH: 'myapp'
+  # set this to the dotnet version to use
+  DOTNET_VERSION: '6.0.x' 
+  # Put your app name here
+  AZURE_WEB_APP_NAME: 'ContactWeb-20291231acw' 
+  # staging by default but you could change to Production if you are not creating a slot 
+  AZURE_WEB_APP_SLOT: 'Production' 
+  #Make sure you create a secret with the publish profile named exactly as below
+  AZURE_PUBLISH_PROFILE_SECRET: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B53B45EF7553410AA5A68B4FF0946B2A }}
+  #Working Directory
+  WORKING_DIRECTORY: 'src/ContactWebEFCore6' 
+
+jobs:  
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '${{ env.DOTNET_VERSION }}'
+          include-prerelease: true
+
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
+        working-directory: '${{ env.WORKING_DIRECTORY }}'
+        
+      - name: dotnet publish
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/${{ env.APP_PACKAGE_PATH }}
+        working-directory: '${{ env.WORKING_DIRECTORY }}'
+
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: '${{ env.AZURE_WEB_APP_NAME }}'
+          slot-name: '${{ env.AZURE_WEB_APP_SLOT }}'
+          package: '${{env.DOTNET_ROOT}}/${{ env.APP_PACKAGE_PATH }}'
+          publish-profile: ${{ env.AZURE_PUBLISH_PROFILE_SECRET }}
