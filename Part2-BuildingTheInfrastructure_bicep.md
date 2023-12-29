@@ -749,7 +749,7 @@ resource contactManagerDBConnectionSecret 'Microsoft.KeyVault/vaults/secrets@202
 
 output keyVaultName string = keyVault.name
 output identityDBConnectionSecretURI string = identityDBConnectionSecret.properties.secretUri
-output contactManagerDBConnectionSecretURI string = contactManagerDBConnectionSecret.properties.secretUri
+output managerDBConnectionSecretURI string = contactManagerDBConnectionSecret.properties.secretUri
 ```
 
 ### Step 2 - Create the parameters file
@@ -862,7 +862,82 @@ param keyVaultName string
 
 With the vault deployed and the secrets in place, you need to complete the deployment by updating the web app to use the key vault for the connection strings.
 
+1. Create a new file to merge the web app settings
 
+    Create a new file in the `iac` folder called 
+
+    ```bash
+    contactWebAppServiceSettingsMerge.bicep
+    ```
+
+1. Add the following text to the bicep file.
+
+```bicep
+param webAppName string
+param appSettings object
+param currentAppSettings object
+
+resource webApp 'Microsoft.Web/sites@2023-01-01' existing = {
+  name: webAppName
+}
+
+//merge the current app settings with the new app settings
+resource siteconfig 'Microsoft.Web/sites/config@2023-01-01' = {
+  parent: webApp
+  name: 'appsettings'
+  properties: union(currentAppSettings, appSettings)
+}
+```
+
+    Note that this file will take parameters of two app settings objects and merge them together.  This will allow us to merge the current app settings with the new app settings/values
+
+1. Create a new file in the `iac` folder to update/add new settings for merge with existing settings 
+
+    ```bash
+    contactWebAppServiceSettingsUpdate.bicep
+    ```  
+
+1. Add the following text to the bicep file.
+
+```bicep
+param webAppName string 
+param defaultDBSecretURI string
+param managerDBSecretURI string
+
+resource webApp 'Microsoft.Web/sites@2023-01-01' existing = {
+  name: webAppName
+}
+
+module updateAndMergeWebAppConfig 'contactWebAppServiceSettingsMerge.bicep' = {
+  name: 'webAppSettings-${webAppName}'
+  params: {
+    currentAppSettings: list('${webApp.id}/config/appsettings', '2023-01-01').properties
+    appSettings: {
+      'ConnectionStrings:DefaultConnection': '@Microsoft.KeyVault(SecretUri=${defaultDBSecretURI})'
+      'ConnectionStrings:MyContactManager': '@Microsoft.KeyVault(SecretUri=${managerDBSecretURI})'
+    }
+    webAppName: webApp.name
+  }
+}
+```  
+
+    Note that this file will set the value of the connection strings to the secret uri for the key vault secret using the latest/current version.  This will allow us to merge the current app settings with the new app settings/values. 
+
+    This does rely on baked-in KeyVault from the app service and does not leverage code.  However, with the code from this application looking for specific configuration values this is easier than modifying the code to look for the key vault secret by name (which is also possible and may be more reliable in production scenarios). 
+
+1. Deploy the solution
+
+    Check in your changes to deploy the solution.  Once the deployment is complete, you can validate the settings in the app service by clicking in the portal.
+
+    !["App Service Settings"](images/Part2-bicep/image0017-updatedAppConfigurationSettingsWithKeyVaultURI.png)  
+
+    >**IMPORTANT**: You must see the green check mark with the `Key Vault Reference` for each of the connection string settings or the value is not actually working from Key Vault.  If you see a red `x` you likely didn't get your permission for the app registration set correctly.  Make sure the web app has a system managed identity and that the system managed identity is authorized to `Get` secrets in the Key Vault access policies.  
+
+    Additional troubleshooting steps:
+    - validate you don't have any typos
+        - `@Microsoft.KeyVault(SecretUri=...)` is case sensitive so don't miss the capital `S` in `SecretUri` and the small 'ri' in Uri, as well as `Microsoft` and `KeyVault`.
+    - validate that the secret is in the key vault with the correct name and value is set to a connection string
+    - validate that the secret URI is actually the correct URI of the secret in the key vault
 
 ## Completion Check
 
@@ -882,8 +957,4 @@ At the end of this step, you should have the following resources:
     - secret for database connection string
     - permission for app service to get/list secrets
 
-
-
-
-
-
+**Congratulations!** You have completed the infrastructure deployment for the application.  You can now move on to the next part of the walkthrough to deploy the application code into the App Service.
