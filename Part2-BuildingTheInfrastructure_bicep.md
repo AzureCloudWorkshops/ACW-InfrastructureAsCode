@@ -310,7 +310,7 @@ Create the parameters file.
 }
 ```  
 
-### Step 3 - Deploy 
+### Step 3 - Deploy Log Analytics for the Web Application's Application Insights
 
 Deploy the log analytics workspace.
 
@@ -478,6 +478,8 @@ At this point, the backing database and log analytics/application insights are i
     - `ConnectionStrings:MyContactManager` - this will be the connection string for the database
     - `APPINSIGHTS:CONNECTIONSTRING` - this will be the instrumentation key for the application insights
 
+    These database values will be leveraged a couple of other times and it's important not to make a *typo* on these so they will need to be parameterized.
+
 1. Create the bicep for the app service and app service plan
 
     Create a new file in the `iac` folder called 
@@ -496,9 +498,14 @@ param appServicePlanName string
 param appServicePlanSku string = 'F1'
 param webAppName string 
 param appInsightsName string
+param identityDBConnectionStringKey string = 'ConnectionStrings:DefaultConnection'
+param managerDBConnectionStringKey string = 'ConnectionStrings:MyContactManager'
+param appInsightsConnectionStringKey string = 'APPINSIGHTS:CONNECTIONSTRING'
 
 var workerRuntime = 'dotnet'
 var webAppFullName = '${webAppName}-${uniqueIdentifier}'
+var identityDBConnectionStringValue = 'ContactWebIdentityDBConnectionString'
+var managerDBConnectionStringValue = 'ContactWebDBConnectionString'
 
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing = {
   name: appInsightsName
@@ -530,16 +537,16 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
       netFrameworkVersion:'v6.0'
       appSettings: [
           {
-            name: 'APPINSIGHTS:CONNECTIONSTRING'
+            name: appInsightsConnectionStringKey
             value: applicationInsights.properties.ConnectionString
           }
           {
-            name: 'ConnectionStrings:DefaultConnection'
-            value: 'ContactWebIdentityDBConnectionString'
+            name: identityDBConnectionStringKey
+            value: identityDBConnectionStringValue
           }
           {
-            name: 'ConnectionStrings:MyContactManager'
-            value: 'ContactWebDBConnectionString'
+            name: managerDBConnectionStringKey
+            value: managerDBConnectionStringValue
           }
         ]
         ftpsState: 'FtpsOnly'
@@ -586,6 +593,15 @@ output webAppFullName string = webApp.name
         },
         "appInsightsName": {
             "value": "contactWebAppInsights"
+        },
+        "identityDBConnectionStringKey": {
+            "value": "ConnectionStrings:DefaultConnection"
+        },
+        "managerDBConnectionStringKey": {
+            "value": "ConnectionStrings:MyContactManager"
+        },
+        "appInsightsConnectionStringKey": { 
+            "value": "APPINSIGHTS:CONNECTIONSTRING"
         }
     }
 }
@@ -610,6 +626,9 @@ module contactWebApplicationPlanAndSite 'contactWebAppService.bicep' = {
     appServicePlanName: appServicePlanName
     appServicePlanSku: appServicePlanSku
     webAppName: webAppName
+    identityDBConnectionStringKey: identityDBConnectionStringKey
+    managerDBConnectionStringKey: managerDBConnectionStringKey
+    appInsightsConnectionStringKey: appInsightsConnectionStringKey
   }
 }
 ```  
@@ -620,9 +639,12 @@ And add the missing parameters to the top of the file:
 param webAppName string
 param appServicePlanName string
 param appServicePlanSku string
+param identityDBConnectionStringKey string
+param managerDBConnectionStringKey string
+param appInsightsConnectionStringKey string
 ```
 
-1. Add the parameters to the parameters file (don't forget the comma):
+1. Add the parameters to the parameters file (don't forget the comma before the first setting):
 
 ```json
         "appServicePlanName": {
@@ -634,6 +656,15 @@ param appServicePlanSku string
         "webAppName": {
             "value": "ContactWeb"
         },
+        "identityDBConnectionStringKey": {
+            "value": "ConnectionStrings:DefaultConnection"
+        },
+        "managerDBConnectionStringKey": {
+            "value": "ConnectionStrings:MyContactManager"
+        },
+        "appInsightsConnectionStringKey": { 
+            "value": "APPINSIGHTS:CONNECTIONSTRING"
+        }
 ```  
 
 1. Check in and deploy
@@ -915,18 +946,20 @@ This file will create new values for existing app settings (could add new ones i
 param webAppName string 
 param defaultDBSecretURI string
 param managerDBSecretURI string
+param identityDBConnectionStringKey string 
+param managerDBConnectionStringKey string 
 
 resource webApp 'Microsoft.Web/sites@2023-01-01' existing = {
   name: webAppName
 }
 
-module updateAndMergeWebAppConfig 'contactWebAppServiceSettingsMerge.bicep' = {
+module web_appsettings_config 'contactWebAppServiceSettingsMerge.bicep' = {
   name: 'webAppSettings-${webAppName}'
   params: {
     currentAppSettings: list('${webApp.id}/config/appsettings', '2023-01-01').properties
     appSettings: {
-      'ConnectionStrings:DefaultConnection': '@Microsoft.KeyVault(SecretUri=${defaultDBSecretURI})'
-      'ConnectionStrings:MyContactManager': '@Microsoft.KeyVault(SecretUri=${managerDBSecretURI})'
+      '${identityDBConnectionStringKey}' : '@Microsoft.KeyVault(SecretUri=${defaultDBSecretURI})'
+      '${managerDBConnectionStringKey}': '@Microsoft.KeyVault(SecretUri=${managerDBSecretURI})'
     }
     webAppName: webApp.name
   }
@@ -938,6 +971,26 @@ module updateAndMergeWebAppConfig 'contactWebAppServiceSettingsMerge.bicep' = {
     This does rely on baked-in KeyVault from the app service and does not leverage code.  However, with the code from this application looking for specific configuration values this is easier than modifying the code to look for the key vault secret by name (which is also possible and may be more reliable in production scenarios). 
 
 ### Step 3 - Deploy the App Settings Update Files
+
+1. Add the call to the update file to the main deployment file
+
+    Add the following to the main deployment file:
+
+```bicep
+module updateContactWebAppSettings 'contactWebAppServiceSettingsUpdate.bicep' = {
+  name: '${webAppName}-updatingAppSettings'
+  scope: contactWebResourceGroup
+  params: {
+    webAppName: contactWebApplicationPlanAndSite.outputs.webAppFullName
+    defaultDBSecretURI: contactWebVault.outputs.identityDBConnectionSecretURI
+    managerDBSecretURI: contactWebVault.outputs.managerDBConnectionSecretURI
+    identityDBConnectionStringKey: identityDBConnectionStringKey
+    managerDBConnectionStringKey: managerDBConnectionStringKey
+  }
+}
+```  
+
+>**Note:** the parameters and values should already be in place from earlier in this part.  
 
 1. Deploy the solution
 

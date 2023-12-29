@@ -19,6 +19,15 @@
         },
         "appInsightsName": {
             "value": "contactWebAppInsights"
+        },
+        "identityDBConnectionStringKey": {
+            "value": "ConnectionStrings:DefaultConnection"
+        },
+        "managerDBConnectionStringKey": {
+            "value": "ConnectionStrings:MyContactManager"
+        },
+        "appInsightsConnectionStringKey": { 
+            "value": "APPINSIGHTS:CONNECTIONSTRING"
         }
     }
 }

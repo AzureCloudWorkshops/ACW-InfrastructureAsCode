@@ -4,9 +4,14 @@ param appServicePlanName string
 param appServicePlanSku string = 'F1'
 param webAppName string 
 param appInsightsName string
+param identityDBConnectionStringKey string = 'ConnectionStrings:DefaultConnection'
+param managerDBConnectionStringKey string = 'ConnectionStrings:MyContactManager'
+param appInsightsConnectionStringKey string  = 'APPINSIGHTS:CONNECTIONSTRING'
 
 var workerRuntime = 'dotnet'
 var webAppFullName = '${webAppName}-${uniqueIdentifier}'
+var identityDBConnectionStringValue = 'ContactWebIdentityDBConnectionString'
+var managerDBConnectionStringValue = 'ContactWebDBConnectionString'
 
 resource applicationInsights 'Microsoft.Insights/components@2020-02-02' existing = {
   name: appInsightsName
@@ -29,7 +34,7 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
   properties: {
     serverFarmId: hostingPlan.id
     siteConfig: {
-      metadata :[
+      metadata: [
         {
           name:'CURRENT_STACK'
           value:workerRuntime
@@ -37,21 +42,21 @@ resource webApp 'Microsoft.Web/sites@2023-01-01' = {
       ]
       netFrameworkVersion:'v6.0'
       appSettings: [
-          {
-            name: 'APPINSIGHTS:CONNECTIONSTRING'
-            value: applicationInsights.properties.ConnectionString
-          }
-          {
-            name: 'ConnectionStrings:DefaultConnection'
-            value: 'ContactWebIdentityDBConnectionString'
-          }
-          {
-            name: 'ConnectionStrings:MyContactManager'
-            value: 'ContactWebDBConnectionString'
-          }
-        ]
-        ftpsState: 'FtpsOnly'
-        minTlsVersion: '1.2'
+        {
+          name: appInsightsConnectionStringKey
+          value: applicationInsights.properties.ConnectionString
+        }
+        {
+          name: identityDBConnectionStringKey
+          value: identityDBConnectionStringValue
+        }
+        {
+          name: managerDBConnectionStringKey
+          value: managerDBConnectionStringValue
+        }
+      ]
+      ftpsState: 'FtpsOnly'
+      minTlsVersion: '1.2'
     }
     httpsOnly: true
   }
