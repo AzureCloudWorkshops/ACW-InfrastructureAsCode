@@ -14,7 +14,7 @@ Before you start this activity, modify your infrastructure as code to only be tr
 
 ```yaml
 name: "******** Deploy Resources"
-d
+
 on:
   push:
     branches: [ nowayjose ]
@@ -33,13 +33,13 @@ In this step you will create a deployment from Azure.
 
     On your app service blade, find `Deployment Center` under `Deployment` in the left navigation.
 
-    ![Deployment Center](/images/Part3/image0001-appServiceDeploymentCenter.png)  
+    !["Deployment Center"](/images/Part3/image0001-appServiceDeploymentCenter.png)   
 
 1. Select GitHub as the source
 
     You will then need to authorize your account to connect Azure to GitHub.  Follow the prompts to do so.
 
-    ![Deployment Center](/images/Part3/image0002-githubauth.png)  
+    !["Github as source"](/images/Part3/image0002-githubauth.png)  
 
 1. Select the organization, repository and branch to the repository where your ContactWeb application is located
 
@@ -50,13 +50,13 @@ In this step you will create a deployment from Azure.
 1. Use the `Basic Authentication` option
 
     Feel free to preview the file but you can just deploy it and then preview it in GitHub (you can't change it anyway)
-    ![Deployment Center](/images/Part3/image0003-basicAuth.png)
+    !["Select basic auth"](/images/Part3/image0003-basicAuth.png)
 
 1. Hit the `Save` button at the top of the page
 
     This will save the deployment and create the GitHub Action workflow for you.
 
-    ![Deployment Center](/images/Part3/image0004-saveTheWorkflow.png)  
+    !["Save the changes"](/images/Part3/image0004-saveTheWorkflow.png)  
 
 ### Step 2 - What is the publish profile?
 
