@@ -478,6 +478,8 @@ jobs:
 
 >**Note**: The deployment first builds the infra, then pushes the app only when the infra is built successfully.
 
+!["Deploy All with two stages"](images/Part3/image0016-deployAll.png)  
+
 1. Terraform.
 
 Add a workflow with the following two-stage deployment:
