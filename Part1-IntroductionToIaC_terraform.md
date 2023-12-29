@@ -127,14 +127,10 @@ provider "azurerm" {
 Next, we need to add a `resource` block to create the storage account:
 
 ```text 
-data "azurerm_resource_group" "stg_rg" {
-  name = "codemash-workshop-rg-sg"
-}
-
 resource "azurerm_storage_account" "cm_stg_acct" {
   name                     = "cmstgacct"
-  resource_group_name      = data.azurerm_resource_group.stg_rg.name
-  location                 = data.azurerm_resource_group.stg_rg.location
+  resource_group_name      = "{YOUR RESOURCE GROUP NAME}"
+  location                 = "{YOUR RESOURCE GROUP LOCATION}"
   account_tier             = "Standard"
   account_replication_type = "LRS"
 }
@@ -218,7 +214,21 @@ Next, execute the `terraform plan` command:
 terraform plan -out main.tfplan
 ```
 
-You should see the following output:
+You should see the following output (some details are omitted):
+
+!["Terraform init results."](images/Part1-terraform/terraformplanresult1.png)
+
+!["Terraform init results."](images/Part1-terraform/terraformplanresult2.png)
+
+Finally, apply the plan by executing the following command:
+
+```text  
+terraform apply main.tfplan
+```
+
+This is the result:
+
+!["Terraform apply results."](images/Part1-terraform/terraformapplyresult.png)
 
 ### Step 2 - Verify the deployment
 
@@ -226,21 +236,88 @@ You should see the following output:
 
 You have a storage account in your resource group that was named as you intended.
 
-## Task 4 - Use parameters
+## Task 4 - Create providers file
 
-In this part you'll create parameters for the storage account name and location.  You'll also learn how to use the parameters in your deployment.
+As mentioned in part 1, when working with Terraform it is recommended to create separate files to keep everything organized. We will start by creating a separate `providers.tf` file. 
 
-### Step 1 - Add parameters to the terraform file
+### Step 1 - Create `providers.tf`file
 
-### Step 2 - Create a parameters file
+### Step 2 - Move `terraform` and `providers` blocks to providers.tf file
 
-### Step 3 - Deploy via parameters file
+You will now move the `terraform` and `providers` block from the main.tf to the providers.tf file, this should have no impact on your deployment but just to confirm execute the `terraform plan` command, you should see the following messages:
+
+```text
+No changes. Your infrastructure matches the configuration.
+
+Terraform has compared your real infrastructure against your configuration and found no differences, so no changes are needed.
+```
+
+## Task 5 - Use input variables
+
+In Terraform module parameters are referred to as `input variables` or simply `variables`, in this part of the workshop you'll create input variables for the storage account name and location.  You'll also learn how to use the variables in your deployment.
+
+### Step 1 - Add input variables to the terraform file
+
+For starters, we will only add input variables for the resource group name, storage account name and location of the storage account.
+
+1. Add the following code to the top of the main.tf file:
+
+```text
+variable "resourceGroupName" {
+    type = string
+    nullable = false
+    default = "{YOUR RESOURCE GROUP NAME}"
+}
+
+variable "storageAccountName" {
+    type = string
+    nullable = false
+    default = "{YOUR STORAGE ACCOUNT NAME}"
+}
+
+variable "location" {
+    type = string
+    nullable = false
+    default = "{YOUR RESOURCE GROUP LOCATION}"
+}
+```
+
+2. Next, use the variables to populate the storage account values, in Terraform input values are referenced using the `var` object. Your storage account resource block should now look like this:
+
+```text
+resource "azurerm_storage_account" "cm_stg_acct" {
+  name                     = var.storageAccountName
+  resource_group_name      = var.resourceGroupName
+  location                 = var.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+```
+3. Execute the `terraform plan` command again, since there were no infrastructure changes you should see this message again:
+
+```text
+No changes. Your infrastructure matches the configuration.
+
+Terraform has compared your real infrastructure against your configuration and found no differences, so no changes are needed.
+```
+
+### Step 2 - Create a variables file
+
+In the previous step we added the ability to use input variables (or parameters) in the terraform template, in this step we will continue with the best practices mentioned above and we will move those variable definitions to a separate file.
+
+1. Add a variables.tf file to your working directory, please note that this is just a suggested name and that as long as the file is in the same directory Terraform will automatically make those variables available in the main module.
+
+2. Move the variable declarations from the main.tf to the variables.tf file, after the change, the only thing left in the main.tf file should be your resource block.
+
+### Step 3 - Deploy via variables file
+
+Execute the `terraform plan` command again, since we are not updating the infrastructure you should again see no changes in the plan.
 
 ### Completion Check
 
-You have a file that you can reuse in multiple resource groups with various storage account names
+You have a file that you can reuse in multiple resource groups with various storage account names (you would need to change the name in the parameter file at this point to ensure it is unique).
 
-## Task 5 - Use variables and functions
+## Task 6 - Use variables and functions
 
 In this module you will learn to use variables and functions to create a unique string name for the storage account name
 
