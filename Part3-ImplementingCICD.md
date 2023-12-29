@@ -309,7 +309,7 @@ In this step, you'll add the auto-migrations back to the code.
 
     Remove the comments to ensure that both database context migrations are run on startup.
 
-    ![Add the migrations back in](/images/Part3/image0013-addMigrationsBackIn.png)
+    !["Add the migrations back in"](images/Part3/image0013-migrationsCommented.png)
 
     ```csharp
     //TODO: Add this back in when you have a database connection to perform migrations on startup
