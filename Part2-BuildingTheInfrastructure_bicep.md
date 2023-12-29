@@ -113,7 +113,7 @@ resource sqlDB 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
 output sqlServerName string = sqlServer.name
 ```  
 
->**Note**: As a reminder, all source files can be found in case something is not working as expected from this walkthrough..
+>**Note**: As a reminder, all source files can be found in the `src/iac/bicep/Part2` folder from this repo case something is not working as expected from this walkthrough.
     
 1. Review the file to see what is happening
 
@@ -236,6 +236,12 @@ Check in the changes and the deployment should run automatically.
     On the database connection string info, validate that you have a database with the name you specified and that you can see the connection string with all the info except the password:
 
     !["Database Connection String"](images/Part2-bicep/image0004-databaseConnectionString.png)  
+
+1. Validate Database SKU
+
+    Make sure that you didn't accidentally create a database with a higher SKU than you wanted.  You should see something like the following:
+
+    !["Database SKU"](images/Part2-bicep/iamge0004.5-databaseSKU.png)    
 
 >**Note:** we will use IAC to get and set the connection string information into the Key Vault in a future step, so you don't need to copy it or save it anywhere.
 
@@ -858,9 +864,13 @@ param keyVaultName string
 
     !["Secrets are set as expected"](images/Part2-bicep/image0016-secretsAreSet.png)  
 
-### Step 4: Update the web app to use the key vault for the connection strings
+## Task 5: Update the web app to use the key vault for the connection strings
 
 With the vault deployed and the secrets in place, you need to complete the deployment by updating the web app to use the key vault for the connection strings.
+
+### Step 1 - Create the bicep file to merge the settings
+
+This first file will take parameters of two app settings objects and merge them together.  This will allow us to merge the current app settings that already exist with the new app settings/values we want to modify or add based on KeyVault secrets that were created.
 
 1. Create a new file to merge the web app settings
 
@@ -889,7 +899,9 @@ resource siteconfig 'Microsoft.Web/sites/config@2023-01-01' = {
 }
 ```
 
-    Note that this file will take parameters of two app settings objects and merge them together.  This will allow us to merge the current app settings with the new app settings/values
+### Step 2 - Create the bicep file to update the app settings   
+
+This file will create new values for existing app settings (could add new ones if desired as well).  The file will then pass the new values and the existing values to the merge file to be combined via a `union` operation.
 
 1. Create a new file in the `iac` folder to update/add new settings for merge with existing settings 
 
@@ -925,11 +937,15 @@ module updateAndMergeWebAppConfig 'contactWebAppServiceSettingsMerge.bicep' = {
 
     This does rely on baked-in KeyVault from the app service and does not leverage code.  However, with the code from this application looking for specific configuration values this is easier than modifying the code to look for the key vault secret by name (which is also possible and may be more reliable in production scenarios). 
 
+### Step 3 - Deploy the App Settings Update Files
+
 1. Deploy the solution
 
     Check in your changes to deploy the solution.  Once the deployment is complete, you can validate the settings in the app service by clicking in the portal.
 
     !["App Service Settings"](images/Part2-bicep/image0017-updatedAppConfigurationSettingsWithKeyVaultURI.png)  
+
+1. Validation and Troubleshooting 
 
     >**IMPORTANT**: You must see the green check mark with the `Key Vault Reference` for each of the connection string settings or the value is not actually working from Key Vault.  If you see a red `x` you likely didn't get your permission for the app registration set correctly.  Make sure the web app has a system managed identity and that the system managed identity is authorized to `Get` secrets in the Key Vault access policies.  
 
@@ -956,5 +972,24 @@ At the end of this step, you should have the following resources:
 - Key Vault
     - secret for database connection string
     - permission for app service to get/list secrets
+
+The files as they exist in the repository should look similar to this:
+
+!["Files in the repository"](images/Part2-bicep/image0018-FinalFileList.png)  
+
+- applicationInsights.bicep
+- applicationInsights.parameters.json
+- azureSQL.bicep
+- azureSQL.parameters.json
+- contactWebAppService.bicep
+- contactWebAppService.parameters.json
+- contactWebAppServiceSettingsMerge.bicep
+- contactWebAppServiceSettingsUpdate.bicep
+- deployContactWebArchitecture.bicep
+- deployContactWebArchitecture.parameters.json
+- keyVault.bicep
+- keyVault.parameters.json
+- logAnalyticsWorkspace.bicep
+- logAnalyticsWorkspace.parameters.json
 
 **Congratulations!** You have completed the infrastructure deployment for the application.  You can now move on to the next part of the walkthrough to deploy the application code into the App Service.
