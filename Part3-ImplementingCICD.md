@@ -49,8 +49,9 @@ In this step you will create a deployment from Azure.
 
 1. Use the `Basic Authentication` option
 
-    Feel free to preview the file but you can just deploy it and then preview it in GitHub (you can't change it anyway)
-    !["Select basic auth"](/images/Part3/image0003-basicAuth.png)
+    Feel free to preview the file but you can just deploy it and then preview it in GitHub (you can't change it anyway)  
+
+    !["Select basic auth"](/images/Part3/image0003-settingsCompletedAndSelectedAddAWorkflow.png)  
 
 1. Hit the `Save` button at the top of the page
 
@@ -280,7 +281,7 @@ Make sure that the application deployed and that you can browse and see the work
 
 1. Review the action for success
 
-    !["Action Successful"](images/Part3/image0010-applicationDeployedSuccessfully.png)  
+    Make sure your action completes successfully.  
 
 1. Navigate to the App Service in the Azure Portal
 
