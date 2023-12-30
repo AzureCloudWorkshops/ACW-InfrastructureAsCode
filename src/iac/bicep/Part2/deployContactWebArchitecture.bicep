@@ -68,7 +68,7 @@ module contactWebApplicationPlanAndSite 'contactWebAppService.bicep' = {
   params: {
     location: contactWebResourceGroup.location
     uniqueIdentifier: uniqueIdentifier
-    appInsightsName: appInsightsName
+    appInsightsName: contactWebApplicationInsights.outputs.applicationInsightsName
     appServicePlanName: appServicePlanName
     appServicePlanSku: appServicePlanSku
     webAppName: webAppName
