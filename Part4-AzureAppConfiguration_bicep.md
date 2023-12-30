@@ -566,11 +566,11 @@ module resetContactWebAppSettingsForAppConfiguration 'contactWebAppServiceSettin
 }
 ```
 
-    note the new parameter for the application insights connection string key.  This will map directly to the value the code is expecting to find `AzureAppConfigConnection`:
+Note the new parameter for the application insights connection string key.  This will map directly to the value the code is expecting to find `AzureAppConfigConnection`:
 
-    !["Existing code shown to validate the new parameter value will need to match exactly"](images/Part4-bicep/image0007-codeExpectsAzureAppConfiguration.png)  
+!["Existing code shown to validate the new parameter value will need to match exactly"](images/Part4-bicep/image0007-codeExpectsAzureAppConfiguration.png)  
 
-    >**Note:** Running the code locally requires the app config connection string and a modification to the app settings.  The App Service, however, can run from Azure with these settings in place.
+>**Note:** Running the code locally requires the app config connection string and a modification to the app settings.  The App Service, however, can run from Azure with these settings in place.
 
 1. Add the new parameter in the main bicep
 
