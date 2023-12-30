@@ -379,6 +379,7 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
 }
 
 output applicationInsightsId string = applicationInsights.id
+output applicationInsightsName string = applicationInsights.name
 ```
 
 ### Step 5 - Create the parameters file  
@@ -622,7 +623,7 @@ module contactWebApplicationPlanAndSite 'contactWebAppService.bicep' = {
   params: {
     location: contactWebResourceGroup.location
     uniqueIdentifier: uniqueIdentifier
-    appInsightsName: appInsightsName
+    appInsightsName: contactWebApplicationInsights.outputs.applicationInsightsName
     appServicePlanName: appServicePlanName
     appServicePlanSku: appServicePlanSku
     webAppName: webAppName
