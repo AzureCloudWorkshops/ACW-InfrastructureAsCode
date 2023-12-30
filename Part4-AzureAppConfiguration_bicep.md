@@ -4,6 +4,28 @@ Welcome to the bonus track! If you made it this far, that's great! You are now r
 
 In this section, you will learn how to create an App Configuration instance and how to use it in your application.  You will then reset the configuration values from the App Service to leverage the App Configuration instead of the Key Vault directly (don't worry, the Key Vault is still used to store the secrets).  You will also need to make a small code change so that the application can leverage the App Configuration.  
 
+## Before you start
+
+It is expected you have completed the first three parts.  If not, this part won't make sense.  Also, in the earlier part of the work, you created a service principal to execute deployments. That was created with `Contributor` access.
+
+To complete the role assignment required in this part, you must elevate the principal to `owner` access.  You might be able to do this on the resource group only.  Without owner role on at least the resource group, the role assignment will fail.  
+
+If you just can't get around it, you could manually add the `App Configuration Data Reader` role to the web app system managed id after deployment and just don't run the bicep for the role assignment.
+
+You can also set the role to restricted privileges for user access:
+
+!["Restricted privileges for user access"](images/Part4-bicep/image0000.1-constrainedUserPrivileges.png)  
+
+Another note is that it has proven very difficult to get the correct id for the role definition.  For that reason I've chosen to hard-code it since it is universal across all subscriptions.  
+
+!["RoleDefinition ID"](images/Part4-bicep/image0000.2-roleDefinition.png)  
+
+The value is:
+
+```text  
+/providers/Microsoft.Authorization/roleDefinitions/516239f1-63e1-4d78-a4de-a74fb236a071
+```  
+
 ## Part 1 - Update the Bicep for the Key Vault
 
 In hindsight, it would have been better to have a managed identity that could be used by both the App Service and the App Configuration.  However, we are going to keep the system managed identity for the App Service and add a new user managed identity for the App Configuration.  This will allow us to use the App Configuration to get the secrets from the Key Vault.  Any additional resources that would need to access the Key Vault would use the managed identity going forward.
@@ -248,6 +270,7 @@ In this step, you will create the bicep to create the App Configuration instance
 
 - App configuration with Identity
 - Two KeyVault references to the Key Vault secrets
+- Web App needs to have permission as `App Data Reader Role' to read the values from the App Configuration
 
 1. Create the bicep file.
 
@@ -266,8 +289,20 @@ param managerDBConnectionStringKey string
 param identityDbSecretURI string
 param managerDbSecretURI string
 param keyVaultUserManagedIdentityName string
+param webAppName string
+param roleDefinitionName string
+param appDataReaderRoleId string
 
 var configName = '${appConfigStoreName}-${uniqueIdentifier}'
+var roleAssignmentId = guid('${webApp.name}', '${appDataReaderRole.name}','${appConfig.name}')
+
+resource appDataReaderRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
+  name: roleDefinitionName
+}
+
+resource webApp 'Microsoft.Web/sites@2023-01-01' existing = {
+  name: webAppName
+}
 
 resource keyVaultUser 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: keyVaultUserManagedIdentityName
@@ -298,7 +333,7 @@ resource identityDBConnectionKeyValuePair 'Microsoft.AppConfiguration/configurat
   parent: appConfig
   properties: {
     contentType: 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-    value: string('${identityDbSecretURI}')
+    value: '{"uri": "${identityDbSecretURI}"}'
   }
 }
 
@@ -307,13 +342,24 @@ resource managerDBConnectionKeyValuePair 'Microsoft.AppConfiguration/configurati
   parent: appConfig
   properties: {
     contentType: 'application/vnd.microsoft.appconfig.keyvaultref+json;charset=utf-8'
-    value: string('${managerDbSecretURI}')
+    value: '{"uri": "${managerDbSecretURI}"}'
+  }
+}
+
+resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: roleAssignmentId
+  scope: appConfig
+  properties: {
+    principalId: webApp.identity.principalId
+    roleDefinitionId: appDataReaderRoleId
+    principalType: 'ServicePrincipal'
   }
 }
 
 output appConfigStoreName string = appConfig.name
 output appConfigStoreEndpoint string = appConfig.properties.endpoint
-
+output dataReaderRoleName string = appDataReaderRole.name
+output dataReaderRoleId string = appDataReaderRole.id
 ```  
 
 This allows you to create the App Configuration instance with the Key Vault references to the secrets.  The App Configuration instance will have a user managed identity that will be used to access the Key Vault secrets.  You will get the user managed identity from the name of the user managed identity that was created in the Key Vault bicep.
@@ -347,6 +393,15 @@ Add a new parameters file called `appConfigStore.parameters.json` and add the fo
         },
         "managerDbSecretURI" : {
             "value": "passedinfrommain"
+        },
+        "webAppName" : {
+            "value": "passedinfrommain"
+        },
+        "roleDefinitionName" : {
+            "value": "App Configuration Data Reader"
+        },
+        "appDataReaderRoleId": {
+            "value": "/providers/Microsoft.Authorization/roleDefinitions/516239f1-63e1-4d78-a4de-a74fb236a071"
         }
     }
 }
@@ -375,11 +430,14 @@ module orgAppConfiguration 'appConfigStore.bicep' = {
     identityDbSecretURI: contactWebVault.outputs.identityDBConnectionSecretURI
     managerDbSecretURI: contactWebVault.outputs.managerDBConnectionSecretURI
     keyVaultUserManagedIdentityName: contactWebVault.outputs.keyVaultUserManagedIdentityName
+    webAppName: contactWebApplicationPlanAndSite.outputs.webAppFullName
+    roleDefinitionName: appDataReaderRoleDefinitionName
+    appDataReaderRoleId: appDataReaderRoleId
   }
 }
 ```
 
-    Notice a number of the parameters are passed in from the Key Vault bicep.  Additionally, the configuration setting keys are necessary for the app configuration to be able to get to the key vault secrets.  The only real new variable here is the name of the app configuration.
+    Notice a number of the parameters are passed in from the Key Vault bicep.  Additionally, the configuration setting keys are necessary for the app configuration to be able to get to the key vault secrets.  The only real new variables here are the name of the app configuration and the name of the `App Configuration Data Reader` role.
 
     Don't forget to add the new parameters to the main deployment parameters file.  
 
@@ -387,6 +445,8 @@ module orgAppConfiguration 'appConfigStore.bicep' = {
 @minLength(5)
 @maxLength(12)
 param appConfigStoreName string
+param appDataReaderRoleDefinitionName string
+param appDataReaderRoleId string
 ```  
 
     Add the following to the parameters file:
@@ -394,6 +454,12 @@ param appConfigStoreName string
 ```json
         "appConfigStoreName": {
             "value": "orgAppConfig"
+        },
+        "appDataReaderRoleDefinitionName": {
+            "value": "App Configuration Data Reader"
+        },
+        "appDataReaderRoleId": {
+            "value": "/providers/Microsoft.Authorization/roleDefinitions/516239f1-63e1-4d78-a4de-a74fb236a071"
         }
 ```
 
@@ -572,7 +638,7 @@ Push your changes and validate the deployment.
 
 1. Validate the application is working as expected.
 
-    !["App is working in Azure"](images/Part4-bicep/image0017-workinginazure.png)
+    !["App is working in Azure"](images/Part4-bicep/image0017-working.png)  
 
 ## Completion
 
