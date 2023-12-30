@@ -6,31 +6,55 @@ In this section, you will learn how to create an App Configuration instance and 
 
 ## Before you start
 
-It is expected you have completed the first three parts.  If not, this part won't make sense.  Also, in the earlier part of the work, you created a service principal to execute deployments. That was created with `Contributor` access.
+It is expected you have completed the first three parts.  If not, this part won't make sense.  Also, in the earlier part of the work, you created a service principal to execute deployments. That was created with `Contributor` access on the subscription.
 
-To complete the role assignment required in this part, you must elevate the principal to `owner` access.  You might be able to do this on the resource group only.  Without owner role on at least the resource group, the role assignment will fail.  
+1. Elevate the principal to owner  
 
-If you just can't get around it, you could manually add the `App Configuration Data Reader` role to the web app system managed id after deployment and just don't run the bicep for the role assignment.
+    To complete the role assignment required in this part for `App Configuration Data Reader` for the web app identity, you must elevate the principal to `owner` access. If your resource group is already created, you could only elevate the app registration on the resource group as owner.  If not, or if you want to deploy from scratch, you can set the ownership on the subscription and limit the role to be able to assign only for the `App Configuration Data Reader`.  Without owner role on at least the resource group, the role assignment will fail during the final part of the app configuration deployment.  
 
-You can also set the role to restricted privileges for user access:
+    Setting the role to restricted privileges for user access:
 
-!["Restricted privileges for user access"](images/Part4-bicep/image0000.1-constrainedUserPrivileges.png)  
+    !["Restricted privileges for user access"](images/Part4-bicep/image0000.1-constrainedUserPrivileges.png)  
 
-Another note is that it has proven very difficult to get the correct id for the role definition.  For that reason I've chosen to hard-code it since it is universal across all subscriptions.  
+1. Why the App Configuration Data Reader role is hard-coded:  
 
-!["RoleDefinition ID"](images/Part4-bicep/image0000.2-roleDefinition.png)  
+    Another note is that it has proven very difficult to get the correct id for the role definition within the bicep.  For that reason I've chosen to hard-code this value since it is universal across all subscriptions.  
 
-The value is:
+    !["RoleDefinition ID"](images/Part4-bicep/image0000.2-roleDefinition.png)  
 
-```text  
-/providers/Microsoft.Authorization/roleDefinitions/516239f1-63e1-4d78-a4de-a74fb236a071
-```  
+    The value is:
 
->**Note:** I was able to get the deployment to work by only giving owner with rights as above on just the resource group.  This does require the resource group to be existing prior to the deployment.
+    ```text  
+    /providers/Microsoft.Authorization/roleDefinitions/516239f1-63e1-4d78-a4de-a74fb236a071
+    ```  
+
+    The output for the retrieved value is the string name, not the id.  This is why I've chosen to hard-code the value.  
+
+    !["Output showing roleId text"](images/Part4-bicep/image0000.3-dataReaderRoleId.png)  
+
+    If you want to get the value, you can use the following CLI command:
+
+    ```bash
+    az role definition list --name 'App Configuration Data Reader'
+    ```
+
+    You'll see that the `name` field contains the same `516239f1-63e1-4d78-a4de-a74fb236a071` value.
+
+    !["RoleDefinition ID"](images/Part4-bicep/image0000.4-RoleDefinitionList.png)  
+
+1. One last thing - the source files
+
+    For this final part, the source files are located in the `Part4-bicep` folder and the `raw_final` for the `c#` code.  The only files that are contained in these folders are files that were modified.  You would still need the rest of the bicep files for the deployment, and of course you need the full application for the website to work. 
+
+Let's get started!
 
 ## Part 1 - Update the Bicep for the Key Vault
 
-In hindsight, it would have been better to have a managed identity that could be used by both the App Service and the App Configuration.  However, we are going to keep the system managed identity for the App Service and add a new user managed identity for the App Configuration.  This will allow us to use the App Configuration to get the secrets from the Key Vault.  Any additional resources that would need to access the Key Vault would use the managed identity going forward.
+In hindsight, it would have been better to have a user-managed identity that could be used by both the App Service and the App Configuration from the start of this activity.  
+
+However, we are going to keep the system-managed identity for the App Service, and we'll add a new user-managed identity for the App Configuration.  
+
+This approach will allow us to use the App Configuration to get the secrets from the Key Vault.  Any additional resources that would need to access the Key Vault would be able to use the managed identity going forward.
 
 >**Note:** User managed identities can be shared by resources to allow for configurations and permissions like this for multiple services. However, they pose a small security risk because they are not automatically cleaned up when resources are deleted.
 
@@ -647,4 +671,3 @@ Push your changes and validate the deployment.
 You have now completed the activities for this cloud workshop. We hope you enjoyed it and learned a lot during our training. Please feel free to reach out to us with any questions or feedback.  If you found any problems, please open issues on the repository. 
 
 We'd love to hear from you!
-
