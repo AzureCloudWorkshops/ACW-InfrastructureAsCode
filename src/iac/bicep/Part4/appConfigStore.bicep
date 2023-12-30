@@ -10,8 +10,20 @@ param managerDBConnectionStringKey string
 param identityDbSecretURI string
 param managerDbSecretURI string
 param keyVaultUserManagedIdentityName string
+param webAppName string
+param roleDefinitionName string
+param appDataReaderRoleId string
 
 var configName = '${appConfigStoreName}-${uniqueIdentifier}'
+var roleAssignmentId = guid('${webApp.name}', '${appDataReaderRole.name}','${appConfig.name}')
+
+resource appDataReaderRole 'Microsoft.Authorization/roleDefinitions@2022-05-01-preview' existing = {
+  name: roleDefinitionName
+}
+
+resource webApp 'Microsoft.Web/sites@2023-01-01' existing = {
+  name: webAppName
+}
 
 resource keyVaultUser 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' existing = {
   name: keyVaultUserManagedIdentityName
@@ -55,5 +67,17 @@ resource managerDBConnectionKeyValuePair 'Microsoft.AppConfiguration/configurati
   }
 }
 
+resource roleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: roleAssignmentId
+  scope: appConfig
+  properties: {
+    principalId: webApp.identity.principalId
+    roleDefinitionId: appDataReaderRoleId
+    principalType: 'ServicePrincipal'
+  }
+}
+
 output appConfigStoreName string = appConfig.name
 output appConfigStoreEndpoint string = appConfig.properties.endpoint
+output dataReaderRoleName string = appDataReaderRole.name
+output dataReaderRoleId string = appDataReaderRole.id

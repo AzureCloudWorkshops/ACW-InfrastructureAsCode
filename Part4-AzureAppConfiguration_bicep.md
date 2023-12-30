@@ -26,6 +26,8 @@ The value is:
 /providers/Microsoft.Authorization/roleDefinitions/516239f1-63e1-4d78-a4de-a74fb236a071
 ```  
 
+>**Note:** I was able to get the deployment to work by only giving owner with rights as above on just the resource group.  This does require the resource group to be existing prior to the deployment.
+
 ## Part 1 - Update the Bicep for the Key Vault
 
 In hindsight, it would have been better to have a managed identity that could be used by both the App Service and the App Configuration.  However, we are going to keep the system managed identity for the App Service and add a new user managed identity for the App Configuration.  This will allow us to use the App Configuration to get the secrets from the Key Vault.  Any additional resources that would need to access the Key Vault would use the managed identity going forward.
