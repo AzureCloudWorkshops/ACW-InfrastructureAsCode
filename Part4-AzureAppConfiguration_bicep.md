@@ -625,7 +625,7 @@ In this task, you'll modify the solution code to work against the App Configurat
 
     !["Code Comments removed"](images/Part4-bicep/image0012-codeupdated.png)  
 
-    >**Note that the code is now using the App Configuration to get the connection string for the database.  In order for this to work locally, you will need to have access to key vault (even if the app config does, you don't from your local machine).  
+    >**Note**: The code is now using the App Configuration to get the connection string for the database.  In order for this to work locally, you will need to have access to key vault (even if the app config does, you don't from your local machine).  
 
     Notice at Azure, the `ManagedIdentityCredential` is used to allow authorization to resources like Key Vault.
 
