@@ -1,0 +1,33 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "value": "eastus"
+        },
+        "uniqueIdentifier": {
+            "value": "20291231acw"
+        },
+        "appServicePlanName": {
+            "value": "contactWebASP"
+        },
+        "appServicePlanSku": {
+            "value": "F1"
+        },
+        "webAppName": {
+            "value": "ContactWeb"
+        },
+        "appInsightsName": {
+            "value": "contactWebAppInsights"
+        },
+        "identityDBConnectionStringKey": {
+            "value": "ConnectionStrings:DefaultConnection"
+        },
+        "managerDBConnectionStringKey": {
+            "value": "ConnectionStrings:MyContactManager"
+        },
+        "appInsightsConnectionStringKey": { 
+            "value": "APPINSIGHTS:CONNECTIONSTRING"
+        }
+    }
+}

@@ -1,0 +1,75 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "rgName": {
+            "value": "ContactWebApplicationRG"
+        },
+        "location": {
+            "value": "eastus"
+        },
+        "uniqueIdentifier": {
+            "value": "20291231acw"
+        },
+        "sqlServerName": {
+            "value": "ContactWebDBServer"
+        },
+        "sqlDatabaseName": {
+            "value": "ContactWebDB"
+        },
+        "sqlServerAdminLogin": {
+            "value": "contactwebdbuser"
+        },
+        "sqlServerAdminPassword": {
+            "value": "workshopDbPwd#54321!"
+        },
+        "clientIPAddress": {
+            "value": "169.197.65.186"
+        },
+        "logAnalyticsWorkspaceName": {
+            "value": "contactWebAnalytics"
+        },
+        "appInsightsName": {
+            "value": "contactWebAppInsights"
+        },
+        "appServicePlanName": {
+            "value": "contactWebASP"
+        },
+        "appServicePlanSku": {
+            "value": "F1"
+        },
+        "webAppName": {
+            "value": "ContactWeb"
+        },
+        "identityDBConnectionStringKey": {
+            "value": "ConnectionStrings:DefaultConnection"
+        },
+        "managerDBConnectionStringKey": {
+            "value": "ConnectionStrings:MyContactManager"
+        },
+        "appInsightsConnectionStringKey": { 
+            "value": "APPINSIGHTS:CONNECTIONSTRING"
+        },
+        "keyVaultName": {
+            "value": "KV-ContactWeb"
+        },
+        "developersGroupObjectId": {
+            "value": "99999999-7777-4444-bbef-fc11qdc3e99c"
+        },
+        "keyVaultUserManagedIdentityName": {
+            "value": "GetSecretsOnlyIdentity"
+        },
+        "appConfigStoreName": {
+            "value": "orgAppConfig"
+        },
+        "appDataReaderRoleDefinitionName": {
+            "value": "App Configuration Data Reader"
+        },
+        "appDataReaderRoleId": {
+            "value": "/providers/Microsoft.Authorization/roleDefinitions/516239f1-63e1-4d78-a4de-a74fb236a071"
+        },
+        "appConfigurationEndpointKey": { 
+            "value": "AzureAppConfigConnection"
+        }
+    }
+}

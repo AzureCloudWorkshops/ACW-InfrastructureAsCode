@@ -191,8 +191,8 @@ Choose your path and complete the work using the tool of your choice.  You can d
 
 >**Important**: There will be requirements for a unique name. When this happens, use the YYYYMMDD of today along with your initials.  For example, if today is 2025-08-15 and your initials are `acw`, your unique identfier would be `20250815acw`.  Append your unique identifier to the end of variables like the storage account name.  This will ensure that you don't have naming conflicts with other people in the workshop.  For example, if the storage account is named `mystorage` then your actual storage account name should be `mystorage20250815acw`.
 
-1. Complete [Part 1 - Introduction to IaC - Bicep](Part1_IntroductionToIaC_bicep.md)  
+1. Complete [Part 1 - Introduction to IaC - Bicep](Part1-IntroductionToIaC_bicep.md)  
 
 - or -
 
-1. Complete [Part 1 - Introduction to IaC - Terraform](Part1_IntroductionToIaC_terraform.md)  
+1. Complete [Part 1 - Introduction to IaC - Terraform](Part1-IntroductionToIaC_terraform.md)  

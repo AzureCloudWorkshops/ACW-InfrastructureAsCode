@@ -1,0 +1,3 @@
+These files are the only files that are changed.
+
+You will need to modify your local secrets for the app config connection string and the local developer toggle as directed.

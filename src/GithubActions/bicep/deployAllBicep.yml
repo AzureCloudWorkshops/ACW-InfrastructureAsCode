@@ -1,0 +1,89 @@
+name: Infrastructure and App Deployment
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }} 
+  AZURE_TENANT_ID:  ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_CLIENT_ID_CONTACTWEB_DEV: '${{ secrets.AZURE_CLIENT_ID_CONTACTWEB_DEV }}'
+  TEMPLATE: 'iac/deployContactWebArchitecture.bicep'
+  PARAMETERS: 'iac/deployContactWebArchitecture.parameters.json'  
+  DEPLOYMENT_NAME: 'BicepDeployResources'
+  REGION: 'eastus'
+  APP_PACKAGE_PATH: 'myapp'
+  DOTNET_VERSION: '6.0.x' 
+  AZURE_WEB_APP_NAME: 'ContactWeb-20291231acw' 
+  AZURE_WEB_APP_SLOT: 'Production' 
+  AZURE_PUBLISH_PROFILE_SECRET: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B53B45EF7553410AA5A68B4FF0946B2A }}
+  WORKING_DIRECTORY: 'src/ContactWebEFCore6' 
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-infrastructure:
+    name: Infrastructure Deployment
+    runs-on: ubuntu-latest
+    environment:
+      name: 'dev'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v1.4.6
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID_CONTACTWEB_DEV }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy Resources
+        uses: Azure/arm-deploy@v1.0.9
+        with:
+          scope: subscription
+          subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
+          region: ${{ env.REGION }}
+          template: '${{ env.TEMPLATE }}'
+          parameters: '${{ env.PARAMETERS }}'
+          deploymentName: '${{env.DEPLOYMENT_NAME}}-${{github.run_number}}'
+          failOnStdErr: true
+
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    name: Application Deployment
+    needs: deploy-infrastructure
+    environment:
+      name: 'dev'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '${{ env.DOTNET_VERSION }}'
+          include-prerelease: true
+
+      - name: Build with dotnet
+        run: dotnet build --configuration Release
+        working-directory: '${{ env.WORKING_DIRECTORY }}'
+        
+      - name: dotnet publish
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/${{ env.APP_PACKAGE_PATH }}
+        working-directory: '${{ env.WORKING_DIRECTORY }}'
+
+      - name: Deploy to Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: '${{ env.AZURE_WEB_APP_NAME }}'
+          slot-name: '${{ env.AZURE_WEB_APP_SLOT }}'
+          package: '${{env.DOTNET_ROOT}}/${{ env.APP_PACKAGE_PATH }}'
+          publish-profile: ${{ env.AZURE_PUBLISH_PROFILE_SECRET }}
