@@ -232,6 +232,14 @@ Do not move forward until you have a service principal with the correct permissi
 
 With everything in place to deploy, it's time to get the automation in place to execute the deployment.  This will be done via GitHub Actions.  Since the choice exists to do this with either bicep or terraform, this walkthrough will show how to do this with both.  The only part that will be different is the deployment action and the actual files used for deployment.  The rest of the workflow will generally be the same.
 
+### Create starter files (Terraform only)
+
+In order to test the automation for Terraform you first need to create a couple files to get you started:
+
+- Create a folder called `Part2` inside the terraform folder you created in part 1 of this workshop.
+- Create a `deployContactWebArchitecture.tf` and providers.tf file in the `Part2` folder as well.
+- Push the files to your repo. 
+
 1. Navigate to the `Actions` tab of your repository and select `set up a workflow yourself`.
 
     !["Actions -> Set up a workflow yourself"](images/Part2-common/image0021-actionworkflow.png)  
@@ -337,6 +345,7 @@ jobs:
 
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
+      working-directory: ${{ github.workspace }}/iac/terraform/Part2
       run: terraform init
 
     # Checks that all Terraform configuration files adhere to a canonical format
@@ -348,7 +357,7 @@ jobs:
     # An exit code of 0 indicated no changes, 1 a terraform failure, 2 there are pending changes.
     - name: Terraform Plan
       id: tf-plan
-      working-directory: ${{ github.workspace }}/iac
+      working-directory: ${{ github.workspace }}/iac/terraform/Part2
       run: |
         export exitcode=0
         terraform plan -detailed-exitcode -no-color -out tfplan || export exitcode=$?
@@ -367,11 +376,12 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: tfplan
-        path: tfplan
+        path: ${{ github.workspace }}/iac/terraform/Part2/tfplan
         
     # Create string output of Terraform Plan
     - name: Create String Output
       id: tf-plan-string
+      working-directory: ${{ github.workspace }}/iac/terraform/Part2
       run: |
         TERRAFORM_PLAN=$(terraform show -no-color tfplan)
         
@@ -392,43 +402,15 @@ jobs:
         SUMMARY: ${{ steps.tf-plan-string.outputs.summary }}
       run: |
         echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
-      
-  terraform-apply:
-    name: 'Terraform Apply'
-    if: github.ref == 'refs/heads/main' && needs.terraform-plan.outputs.tfplanExitCode == 2
-    runs-on: ubuntu-latest
-    environment: dev
-    needs: [terraform-plan]
-    
-    steps:
-    # Checkout the repository to the GitHub Actions runner
-    - name: Checkout
-      uses: actions/checkout@v4
-
-    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-
-    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-    - name: Terraform Init
-      run: terraform init
-      working-directory: ${{ github.workspace }}/iac
-
-    # Download saved plan from artifacts  
-    - name: Download Terraform Plan
-      uses: actions/download-artifact@v3
-      with:
-        name: tfplan
-
+        
     # Terraform Apply
     - name: Terraform Apply
-      run: terraform apply -auto-approve tfplan
-      working-directory: ${{ github.workspace }}/iac
+      working-directory: ${{ github.workspace }}/iac/terraform/Part2
+      run: terraform apply -auto-approve ${{ github.workspace }}/iac/terraform/Part2/tfplan      
+
 ```
 
-//TODO: Terraform above does not work and not sure what this will look like for tf users...
-
->**Note:** If doing bicep, you don't currently have a `deployContactWebArchitecture.bicep` file so you'll get a failure.  For Terraform if you had a working *.tf file you may have succeeded here. not sure yet.
+>**Note:** If doing bicep, you don't currently have a `deployContactWebArchitecture.bicep` file so you'll get a failure.  For Terraform you should see a plan with no changes being generated.
 
 1. For Bicep: Even though the run failed, validate login was successful
 
@@ -477,15 +459,14 @@ jobs:
     >**Note:** The bicep files above can be found in the `iac/bicep/Part2/starter` folder of this repo.
 
     For Terraform:  
-
-    - Create a file called `deployContactWebArchitecture.tf` in the `iac` folder of your repo.
-    - Create a file called `terraform.tfvars` in the `iac` folder of your repo.
-    - Create a file called `variables.tf` in the `iac` folder of your repo.
+    
+    - Create a file called `terraform.tfvars` in the `Part2` folder of your repo.
+    - Create a file called `variables.tf` in the `Part2` folder of your repo.
     - Ensure you have a resource group and container for the state file in your subscription as follows:
     
         - RG: `rg-terraform-github-actions-state`
         - Storage Account: `tfghactionsYYYYMMDDxxx`
-        - container: `tfstate`
+        - container: `tfstatepart2`
 
     Add the following code to your `deployContactWebArchitecture.tf` file:
 
@@ -498,11 +479,11 @@ terraform {
     }
   }
 
-  # Update this block with the location of your terraform state file
+  # Update this block with the location of your terraform state file (you should have created this resource group in part 1)
   backend "azurerm" {
     resource_group_name  = "rg-terraform-github-actions-state"
     storage_account_name = "tfghactions20291231acw"
-    container_name       = "tfstate"
+    container_name       = "tfstatepart2"
     key                  = "terraform.tfstate"
     use_oidc             = true
   }
@@ -530,8 +511,15 @@ location            = "eastus"
     Add the following to your `variables.tf` file:
 
 ```terraform
-variable "resource_group_name" {}
-variable "location" {}
+variable "resource_group_name" {
+    type = string
+    nullable = false
+}
+
+variable "location" {
+    type = string
+    nullable = false
+}
 ```
 
 1. Check in your changes and ensure automation deployment completes successfully
