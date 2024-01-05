@@ -623,6 +623,42 @@ module "storageContainer" {
 }
 ```
 
+## Task 8 - Use azurerm backend
+
+As you already know, the state file is key for Terraform to know what changes need to be done to the infrastructure; this file can be saved in different locations. So far, we have been using the local backend but in this step we will add a remote backend which will be needed for automated deployments.
+
+### Step 1 - Create infrastructure for state file
+
+Go to the Azure Portal and create the following resources:
+
+- RG: `rg-terraform-github-actions-state`
+- Storage Account: `tfghactionsYYYYMMDDxxx`
+- container: `tfstatepart1`
+
+### Step 2 - Copy state file to storage container
+
+Go to your storage container and upload your terraform.tfstate file:
+
+!["Remote state."](images/Part1-terraform/remotestate1.png)
+
+### Step 3 - Add a backend block to the providers.tf file
+
+Open the providers.tf file and add this block after the `required_providers`:
+
+```terraform
+backend "azurerm" {
+    resource_group_name  = "rg-terraform-github-actions-state"
+    storage_account_name = "{YOUR_STORAGE_ACCOUNT_NAME}"
+    container_name       = "tfstatepart1"
+    key                  = "terraform.tfstate"
+    use_oidc             = true
+  }
+```
+
+### Step 4 - Create a deployment plan
+
+Since we updated the backend configuration we need to execute the `terraform init` command and then execute the `terraform plan` command, since the state is the same as the last time you should see the message of no changes needed for the configuration.
+
 ## Completion check
 
 At this point you have learned most of the basic concepts you will need to work with Terraform for infrastructure deployments. Make sure that all the files were created successfully and that you can re-run your deployments at will. The repetitive and consistent nature of the deployments are some of the main reasons you want to use Infrastructure as Code.
