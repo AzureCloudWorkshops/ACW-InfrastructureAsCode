@@ -486,7 +486,152 @@ jobs:
 Add a workflow with the following two-stage deployment:
 
 ```yaml
-tbd
+name: "Infrastructure and App Deployment"
+
+on:
+  push:
+    branches: 
+      - main
+  workflow_dispatch:
+
+env: 
+  ARM_CLIENT_ID: "${{ secrets.AZURE_CLIENT_ID_CONTACTWEB_DEV }}"
+  ARM_SUBSCRIPTION_ID: "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+  ARM_TENANT_ID: "${{ secrets.AZURE_TENANT_ID }}"
+  CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }} 
+  DEPLOYMENT_NAME: 'TerraformDeployResources'
+  REGION: 'eastus'
+  APP_PACKAGE_PATH: 'myapp'
+  # set this to the dotnet version to use
+  DOTNET_VERSION: '6.0.x' 
+  # Put your app name here
+  AZURE_WEB_APP_NAME: 'ContactWebTerraform-20240109sam' 
+  # staging by default but you could change to Production if you are not creating a slot 
+  AZURE_WEB_APP_SLOT: 'Production' 
+  #Make sure you create a secret with the publish profile named exactly as below
+  AZURE_PUBLISH_PROFILE_SECRET: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_8C1897C4F5CD4F2389D5F7EE9D119939 }}
+  #Working Directory
+  WORKING_DIRECTORY: 'src/ContactWebEFCore6'
+  
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-infrastructure:
+    name: 'Terraform Plan'
+    runs-on: ubuntu-latest
+    env:
+      #this is needed since we are running terraform with read-only permissions
+      ARM_SKIP_PROVIDER_REGISTRATION: true
+    outputs:
+      tfplanExitCode: ${{ steps.tf-plan.outputs.exitcode }}
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Install the latest version of the Terraform CLI
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_wrapper: false
+
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      working-directory: ${{ github.workspace }}/iac/terraform/Part2
+      run: terraform init
+
+    # Checks that all Terraform configuration files adhere to a canonical format
+    # Will fail the build if not
+    - name: Terraform Format
+      run: terraform fmt -check
+
+    # Generates an execution plan for Terraform
+    # An exit code of 0 indicated no changes, 1 a terraform failure, 2 there are pending changes.
+    - name: Terraform Plan
+      id: tf-plan
+      working-directory: ${{ github.workspace }}/iac/terraform/Part2
+      run: |
+        export exitcode=0
+        terraform plan -detailed-exitcode -no-color -out tfplan || export exitcode=$?
+
+        echo "exitcode=$exitcode" >> $GITHUB_OUTPUT
+        
+        if [ $exitcode -eq 1 ]; then
+          echo Terraform Plan Failed!
+          exit 1
+        else 
+          exit 0
+        fi
+        
+    # Save plan to artifacts  
+    - name: Publish Terraform Plan
+      uses: actions/upload-artifact@v3
+      with:
+        name: tfplan
+        path: ${{ github.workspace }}/iac/terraform/Part2/tfplan
+        
+    # Create string output of Terraform Plan
+    - name: Create String Output
+      id: tf-plan-string
+      working-directory: ${{ github.workspace }}/iac/terraform/Part2
+      run: |
+        TERRAFORM_PLAN=$(terraform show -no-color tfplan)
+        
+        delimiter="$(openssl rand -hex 8)"
+        echo "summary<<${delimiter}" >> $GITHUB_OUTPUT
+        echo "## Terraform Plan Output" >> $GITHUB_OUTPUT
+        echo "<details><summary>Click to expand</summary>" >> $GITHUB_OUTPUT
+        echo "" >> $GITHUB_OUTPUT
+        echo '```terraform' >> $GITHUB_OUTPUT
+        echo "$TERRAFORM_PLAN" >> $GITHUB_OUTPUT
+        echo '```' >> $GITHUB_OUTPUT
+        echo "</details>" >> $GITHUB_OUTPUT
+        echo "${delimiter}" >> $GITHUB_OUTPUT
+        
+    # Publish Terraform Plan as task summary
+    - name: Publish Terraform Plan to Task Summary
+      env:
+        SUMMARY: ${{ steps.tf-plan-string.outputs.summary }}
+      run: |
+        echo "$SUMMARY" >> $GITHUB_STEP_SUMMARY
+        
+    # Terraform Apply
+    - name: Terraform Apply
+      working-directory: ${{ github.workspace }}/iac/terraform/Part2
+      run: terraform apply -auto-approve ${{ github.workspace }}/iac/terraform/Part2/tfplan      
+
+  build-and-deploy:
+    runs-on: windows-latest
+    needs: deploy-infrastructure
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        include-prerelease: true
+    
+    - name: Build with dotnet
+      run: dotnet build --configuration Release
+      working-directory: '${{ env.WORKING_DIRECTORY }}'
+       
+    - name: dotnet publish
+      run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/${{ env.APP_PACKAGE_PATH }}
+      working-directory: '${{ env.WORKING_DIRECTORY }}'
+            
+    - name: Deploy to Azure Web App
+      id: deploy-to-webapp
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: '${{ env.AZURE_WEB_APP_NAME }}'
+        slot-name: '${{ env.AZURE_WEB_APP_SLOT }}'
+        package: '${{env.DOTNET_ROOT}}/${{ env.APP_PACKAGE_PATH }}'
+        publish-profile: ${{ env.AZURE_PUBLISH_PROFILE_SECRET }}      
 ```
 
 ## Final Thoughts
