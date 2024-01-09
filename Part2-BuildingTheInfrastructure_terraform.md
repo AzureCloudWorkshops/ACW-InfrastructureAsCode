@@ -506,72 +506,126 @@ At this point, the backing database and log analytics/application insights are i
 
 
 ```terraform
+data "azurerm_application_insights" "cm_app_insights" {
+  name                = var.appInsightsName
+  resource_group_name = var.resourceGroupName
+}
 
+resource "azurerm_service_plan" "cm_hosting_plan" {
+  name                = "${var.appServicePlanName}-${var.uniqueIdentifier}"
+  resource_group_name = var.resourceGroupName
+  location            = var.location
+  os_type             = "Windows"
+  sku_name            = "F1"  
+}
+
+resource "azurerm_windows_web_app" "cm_webapp" {
+  name                = "${var.webAppName}-${var.uniqueIdentifier}"
+  resource_group_name = var.resourceGroupName
+  location            = azurerm_service_plan.cm_hosting_plan.location
+  service_plan_id     = azurerm_service_plan.cm_hosting_plan.id    
+  identity {
+    type = "SystemAssigned"
+  }      
+    
+  site_config {
+    always_on = false 
+    application_stack {
+        dotnet_version = "v6.0"
+        current_stack  = "dotnet"
+    }              
+  }
+
+  app_settings = {    
+    "ConnectionStrings:DefaultConnection" = "@Microsoft.KeyVault(SecretUri=${var.defaultDBSecretURI})"
+    "ConnectionStrings:MyContactManager"  = "@Microsoft.KeyVault(SecretUri=${var.managerDBSecretURI})"
+    "APPINSIGHTS:CONNECTIONSTRING"        = data.azurerm_application_insights.cm_app_insights.connection_string
+    "WEBSITE_ENABLE_SYNC_UPDATE_SITE"     = "true"
+    "WEBSITE_RUN_FROM_PACKAGE"            = "1"
+  }
+}
+
+resource "azurerm_role_assignment" "kv_access_webapp" {
+  scope                = var.keyVaultId
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_windows_web_app.cm_webapp.identity[0].principal_id
+}
 ```
+
+Notice that apart from creating the web app service we are giving the resource permission to access the keyvault, we are limiting the permissions to just this particular key vault but you have the option to set those permissions at the resource group level as well.
 
 ### Step 2 - Add variables to file.
 
 1. Add the following text to the variables file.  
 
 ```terraform
-{
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-        "location": {
-            "value": "eastus"
-        },
-        "uniqueIdentifier": {
-            "value": "20291231acw"
-        },
-        "appServicePlanName": {
-            "value": "contactWebASP"
-        },
-        "appServicePlanSku": {
-            "value": "F1"
-        },
-        "webAppName": {
-            "value": "ContactWeb"
-        },
-        "appInsightsName": {
-            "value": "contactWebAppInsights"
-        },
-        "identityDBConnectionStringKey": {
-            "value": "ConnectionStrings:DefaultConnection"
-        },
-        "managerDBConnectionStringKey": {
-            "value": "ConnectionStrings:MyContactManager"
-        },
-        "appInsightsConnectionStringKey": { 
-            "value": "APPINSIGHTS:CONNECTIONSTRING"
-        }
-    }
+variable "resourceGroupName" {
+    type     = string
+    nullable = false
+}
+
+variable "location" {
+    type     = string
+    nullable = false
+}
+
+variable "appInsightsName" {
+    type     = string
+    nullable = false
+}
+
+variable "uniqueIdentifier" {
+    type     = string
+    nullable = false
+}
+
+variable "appServicePlanName" {
+    type     = string
+    nullable = false
+}
+
+variable "webAppName" {
+    type     = string
+    nullable = false
+}
+
+variable "defaultDBSecretURI" {
+    type     = string
+    nullable = false
+}
+
+variable "managerDBSecretURI" {
+    type     = string
+    nullable = false
+}
+
+variable "keyVaultId" {
+    type     = string
+    nullable = false
 }
 ```
 
 ### Step 3 - Deploy
 
-Add the parameters and bicep module to the main deployment files
+Add the variables and app service module to the root module
 
-1. Add the deployment to the main deployment file
+1. Add the deployment to the root module
 
-    Add the following to the main deployment file:
+    Add the following to the root module:
 
-```bicep
-module contactWebApplicationPlanAndSite 'contactWebAppService.bicep' = {
-  name: '${webAppName}-deployment'
-  scope: contactWebResourceGroup
-  params: {
-    location: contactWebResourceGroup.location
-    uniqueIdentifier: uniqueIdentifier
-    appInsightsName: contactWebApplicationInsights.outputs.applicationInsightsName
-    appServicePlanName: appServicePlanName
-    appServicePlanSku: appServicePlanSku
-    webAppName: webAppName
-    identityDBConnectionStringKey: identityDBConnectionStringKey
-    managerDBConnectionStringKey: managerDBConnectionStringKey
-    appInsightsConnectionStringKey: appInsightsConnectionStringKey
-  }
+```terraform
+module "appService" {
+  source = "./modules/appService"
+
+  resourceGroupName  = azurerm_resource_group.rg-contact-web-application.name
+  location           = azurerm_resource_group.rg-contact-web-application.location
+  appInsightsName    = var.appInsightsName
+  uniqueIdentifier   = var.uniqueIdentifier
+  appServicePlanName = var.appServicePlanName
+  webAppName         = var.webAppName
+  defaultDBSecretURI = module.keyvault.identityDBConnectionSecretURI
+  managerDBSecretURI = module.keyvault.managerDBConnectionSecretURI
+  keyVaultId         = module.keyvault.keyVaultId
 }
 ```  
 
@@ -586,41 +640,57 @@ param managerDBConnectionStringKey string
 param appInsightsConnectionStringKey string
 ```
 
-1. Add the parameters to the parameters file (don't forget the comma before the first setting):
-
-```json
-        "appServicePlanName": {
-            "value": "contactWebASP"
-        },
-        "appServicePlanSku": {
-            "value": "F1"
-        },
-        "webAppName": {
-            "value": "ContactWeb"
-        },
-        "identityDBConnectionStringKey": {
-            "value": "ConnectionStrings:DefaultConnection"
-        },
-        "managerDBConnectionStringKey": {
-            "value": "ConnectionStrings:MyContactManager"
-        },
-        "appInsightsConnectionStringKey": { 
-            "value": "APPINSIGHTS:CONNECTIONSTRING"
-        }
-```  
+Aaaand... You guessed it, you need to add the new variables to the `variables.tf` in the root module. 
 
 1. Check in and deploy
 
     Navigate back to the resource group and review the resources.
 
-    !["Resources Exist in the resource group"](images/Part2-bicep/image0008-contactWebAppServiceRG.png)  
+    !["Resources Exist in the resource group"](images/Part2-terraform/image0008-contactWebAppServiceRG.png)  
 
 1. Ensure the web app is created:
 
     Review the App Service Plan for free tier:
 
-    !["App Service Plan Free Sku"](images/Part2-bicep/image0009-contactWebAppServicePlan.png)  
+    !["App Service Plan Free Sku"](images/Part2-terraform/image0009-contactWebAppServicePlan.png)  
 
-    Review the App Service for settings:
+    Review the App Service for settings, just like with the Bicep deployments, make sure that the key vault references have a green checkmark:
 
-    !["App Service Configuration Settings"](images/Part2-bicep/image0010-appServiceConfigurationSet.png)
+    !["App Service Configuration Settings"](images/Part2-terraform/image0010-appServiceConfigurationSet.png)
+
+## Completion Check
+
+Make sure that the following resources and connections are created:
+
+At the end of this step, you should have the following resources:
+- Resource Group
+- Log Analytics Workspace
+- Application Insights
+- App Service Plan
+    - F1 Tier for free deployment
+- App Service
+    - leverages application insights instrumentation key/connection string
+- Azure SQL Server
+    - basic tier ($5/month)
+- Key Vault
+    - secret for database connection string
+    - permission for app service to get/list secrets
+
+The files as they exist in the repository should look similar to this:
+
+!["Files in the repository"](images/Part2-terraform/image0018-FinalFileList.png)  
+
+- deployContactWebArchitecture.tf
+- variables.tf
+- providers.tf
+- terraform.tfvars
+
+You should also have the following modules:
+
+- appInsights
+- appService
+- keyVault
+- logAnalyticsWorkspace
+- sqlServer
+
+**Congratulations!** You have completed the infrastructure deployment for the application.  You can now move on to the next part of the walkthrough to deploy the application code into the App Service.

@@ -27,3 +27,18 @@ variable "webAppName" {
     type     = string
     nullable = false
 }
+
+variable "defaultDBSecretURI" {
+    type     = string
+    nullable = false
+}
+
+variable "managerDBSecretURI" {
+    type     = string
+    nullable = false
+}
+
+variable "keyVaultId" {
+    type     = string
+    nullable = false
+}
