@@ -33,27 +33,21 @@ In this step you'll create the Terraform module for the SQL Server and database
 1. Add the following text to the main module.
 
 ```terraform
+locals {
+  sqlServerUniqueName   = "${var.sqlServerName}${var.uniqueIdentifier}"
+}
+
 # Azure SQL Server
 resource "azurerm_mssql_server" cm_sql_server {
-  name                                  = "${local.resourcePrefix}-sqlserver-${var.environment}-${arm2tf_unique_string.uniqueid.id}"
-  resource_group_name                   = azurerm_resource_group.cm_rg.name
-  location                              = azurerm_resource_group.cm_rg.location
+  name                                  = local.sqlServerUniqueName
+  resource_group_name                   = var.resourceGroupName
+  location                              = var.location
   version                               = "12.0"
   administrator_login                   = var.sqlServerAdmin
   administrator_login_password          = var.sqlServerPwd
   outbound_network_restriction_enabled  = false
   minimum_tls_version                   = "1.2"
   public_network_access_enabled         = true
-
-  azuread_administrator {
-    login_username = "Sam.Gomez@geneca.com"
-    object_id      = "6d84e694-c6d6-42e7-8950-1e443566fc7e"
-    azuread_authentication_only = false    
-  }
-
-  tags = {
-    environment = "production"
-  }
 }
 
 resource "azurerm_mssql_firewall_rule" "allowAzureServices" {
@@ -61,6 +55,26 @@ resource "azurerm_mssql_firewall_rule" "allowAzureServices" {
   server_id        = azurerm_mssql_server.cm_sql_server.id
   start_ip_address = "0.0.0.0"
   end_ip_address   = "0.0.0.0"
+}
+
+resource "azurerm_mssql_firewall_rule" "allowClientMachine" {
+  name             = "AllowClientMachine"
+  server_id        = azurerm_mssql_server.cm_sql_server.id
+  start_ip_address = var.clientIpAddress
+  end_ip_address   = var.clientIpAddress
+}
+
+resource "azurerm_mssql_database" "cm_db" {
+  name                        = var.sqlDatabaseName
+  server_id                   = azurerm_mssql_server.cm_sql_server.id
+  collation                   = "SQL_Latin1_General_CP1_CI_AS"
+  max_size_gb                 = 2
+  read_scale                  = false
+  sku_name                    = var.sqlDbSkuName
+  zone_redundant              = false
+  auto_pause_delay_in_minutes = 60
+  ledger_enabled              = false
+  min_capacity                = 0.5
 }
 ```
 
