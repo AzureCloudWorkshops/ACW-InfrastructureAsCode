@@ -39,8 +39,14 @@ If you get stuck, refer to the GitHub documents for:
 
 #### Steps
 
-1. Create a local folder for your working directory, then initialize a repository in it - [or fork this repo, clone it to your working directory and skip to step 4]
-1. If you didn't fork, download the code from the '/src/StarterProject' folder of this repository.
+1. For simplicity, you can fork this repo: [https://github.com/AzureCloudWorkshops/ACW-InfrastructureAsCode_Workshop](https://github.com/AzureCloudWorkshops/ACW-InfrastructureAsCode_Workshop/blob/main/README.md).
+
+Skip to the step "Open the project in Visual Studio" below.
+
+OR:  
+
+1. Create a local folder for your working directory, then initialize a repository in it.
+1. Download the code from the '/src/StarterProject' folder of this repository.
 1. Unzip the code into a folder at the root of your local repository.  
 1. Add a .gitignore file if one is not included
 
