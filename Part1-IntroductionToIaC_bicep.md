@@ -29,7 +29,7 @@ To complete this activity, you must have an editor like VSCode, an Azure Subscri
 
 In order to create a deployment, a bicep file is needed. The overall goal for this activity is to create a storage account using Bicep.  We'll do this in two steps by first creating a new bicep file. During this first deployment, we will use a resource-group level deployment. As we're going through this walkthrough, you'll learn about using parameters, variables, and outputs, as well as how to create and use separate files as modules.  You will also learn about the incremental nature of the deployment.
 
->**Note:** for this activity, I'm using VSCode with the Bicep extension.  Additionally, I've created a new repository at GitHub which has the starter web application code in it and will be where I'm generating screenshots.  For this reason, if you haven't already, you will want to have a GitHub repository where you can store your code and your bicep files (if you forked this repo you can leverage this repo but if you want it to be cleaner I would recommend your own repository with the source code only).
+>**Note:** for this activity, I'm using VSCode with the Bicep extension.  Additionally, I've created a new repository at GitHub which has the starter web application code in it and will be where I'm generating screenshots.  For this reason, if you haven't already, you will want to have a GitHub repository where you can store your code and your bicep files. For simplicity, [fork this repo](https://github.com/AzureCloudWorkshops/ACW-InfrastructureAsCode_Workshop)
 
 A good way to store your resources would be similar to the following:
 

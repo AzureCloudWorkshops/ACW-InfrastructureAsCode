@@ -44,11 +44,11 @@ There are 3 main commands that we will explore in this section:
 
 To get started, let's create our first Terraform file. The overall goal for this activity is to create a resource group and a storage account.  We'll do this in two steps.  First, we'll create a resource group, then we'll create a storage account. As we're going, we will create the recommended file structure mentioned above while learning about using variables and outputs, as well as how to create and use additional files as modules.
 
->**Note:** for this activity, I'm using VSCode with the Terraform extension.  Additionally, I've created a new repository at GitHub which has the starter web application code in it and will be where I'm generating screenshots.  For this reason, if you haven't already, you need a GitHub repository where you can store your code and your Terraform files.
+>**Note:** for this activity, I'm using VSCode with the Terraform extension.  Additionally, I've created a new repository at GitHub which has the starter web application code in it and will be where I'm generating screenshots.  For this reason, if you haven't already, you will want to have a GitHub repository where you can store your code and your terraform files. For simplicity, [fork this repo](https://github.com/AzureCloudWorkshops/ACW-InfrastructureAsCode_Workshop)
 
 A good way to store this would be similar to the following:
 
-!["Initial repo with folder structure"](images/Part1-terraform/image0001-initialrepo.png)  
+!["Initial repo with folder structure"](images/Part1-bicep/image0001-initialrepo.png)  
 
 ### Step 1 - Create your file `main.tf`
 
@@ -97,7 +97,7 @@ Before moving on, ensure that you have a file called `main.tf` in a folder calle
 For this first activity, you'll be creating a simple storage account.  To do this easily, you'll want a couple of extensions for Terraform in place in VSCode:
 
 - Terraform: 
-!["The VSCode Terraform Extension is shown"](images/Part1-terraform/image0003-bicepExtension.png)  
+!["The VSCode Terraform Extension is shown"](images/Part1-common/image0003-bicepExtension.png)  
 
 - Azure Tools: 
 !["The VSCode Azure Tools Extension is shown"](images/Part1-terraform/image0004-azuretools.png)
@@ -150,15 +150,15 @@ Run the following command to log in to your Azure subscription:
 az login
 ```
 
-!["Logging into Azure"](images/Part1-terraform/azurelogin.png)  
+!["Logging into Azure"](images/Part1-common/image0002-azlogin.png)  
 
 A browser window will open, enter login credentials or select an account that you are already logged in to.
 
-!["Selecting an account in the browser"](images/Part1-terraform/azureloginselect.png)  
+!["Selecting an account in the browser"](images/Part1-common/image0003-azloginselectyouraccount.png)  
 
 A confirmation window will appear.
 
-!["Login confirmation"](images/Part1-terraform/azureloginconfirmation.png)  
+!["Login confirmation"](images/Part1-common/image0004-azloginconfirmationdialog.png)  
 
 >**Note:** If you are using the Azure Cloud Shell, you can skip to step 3 and just use the cloud shell.
 
