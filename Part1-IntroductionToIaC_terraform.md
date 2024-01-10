@@ -57,7 +57,7 @@ For Terraform, we will start by creating a main.tf file.  This can be done in a 
 Folder:  
 
 ```bash  
-iac
+iac\terraform\Part1_Main_Module
 ```  
 
 FileName:
@@ -88,7 +88,7 @@ PowerShell:
 
 ### Completion Check
 
-Before moving on, ensure that you have a file called `main.tf` in a folder called `iac\terraform` at the root of your repository.
+Before moving on, ensure that you have a file called `main.tf` in a folder called `iac\terraform\Part1_Main_Module` at the root of your repository.
 
 !["The file main.tf along with the commands to create in bash"](images/Part1-terraform/image0002-creatingTheTerraformFile.png)  
 
@@ -97,7 +97,7 @@ Before moving on, ensure that you have a file called `main.tf` in a folder calle
 For this first activity, you'll be creating a simple storage account.  To do this easily, you'll want a couple of extensions for Terraform in place in VSCode:
 
 - Terraform: 
-!["The VSCode Terraform Extension is shown"](images/Part1-terraform/image0003-bicepExtension.png)  
+!["The VSCode Terraform Extension is shown"](images/Part1-terraform/image0003-terraformExtension.png)  
 
 - Azure Tools: 
 !["The VSCode Azure Tools Extension is shown"](images/Part1-terraform/image0004-azuretools.png)
@@ -136,59 +136,7 @@ resource "azurerm_storage_account" "cm_stg_acct" {
 }
 ```
 
-## Task 2 - Create a resource group
-
-You can create a resource group in the portal or via command line commands with the azure CLI. If you are struggling with the CLI, just pivot and go create a resource group in the portal (or switch to run the commands in the Azure Cloud Shell rather than from your local machine).
-
-Assuming that creating a resource group is straight forward in the portal, let's do it via the CLI.
-
-### Step 1 - Get Logged in
-
-Run the following command to log in to your Azure subscription:
-
-```text  
-az login
-```
-
-!["Logging into Azure"](images/Part1-terraform/azurelogin.png)  
-
-A browser window will open, enter login credentials or select an account that you are already logged in to.
-
-!["Selecting an account in the browser"](images/Part1-terraform/azureloginselect.png)  
-
-A confirmation window will appear.
-
-!["Login confirmation"](images/Part1-terraform/azureloginconfirmation.png)  
-
->**Note:** If you are using the Azure Cloud Shell, you can skip to step 3 and just use the cloud shell.
-
-### Step 2 - Ensure your subscription
-
-Run the following command:
-
-```text  
-az account show
-```
-
-If the account shown is not the one you want, run the following command to see all the Azure accounts you have access to:
-
-```text  
-az account list
-```
-
-Copy the value in the `id` field and run the following command:
-
-```text  
-az account set --subscription {YOUR_ID}
-```
-
-Run the `az account show` command again to confirm that the right account is set.
-
-### Completion Check
-
-You are logged in to Azure with the appropriate subscription.
-
-## Task 3 - Run the deployment
+## Task 2 - Run the deployment
 
 As mentioned in part 1, there are 3 commands that make up the basic Terraform workflow:
 
@@ -196,11 +144,11 @@ As mentioned in part 1, there are 3 commands that make up the basic Terraform wo
 - terraform plan
 - terraform apply
 
-The first command only needs to be executed when creating a new configuration or updating an existing one. Running multiple times should not cause any issues.
+The first command only needs to be executed when creating a new configuration or updating an existing one. However, running the command multiple times should not cause any issues.
 
 ### Step 1 - Issue commands to run the deployment
 
-Before you execute any commands, make sure that you are in the `terraform`folder
+Before you execute any commands, make sure that you are in the `terraform\Part1_Main_Module`folder
 
 !["Terraform directory."](images/Part1-terraform/terraformdirectory.png)
 
@@ -321,7 +269,7 @@ You might have noticed that so far you haven't been asked to provide a value for
 
 2. Execute the `terraform plan` command, you should see this prompt:
 
-!["Terraform variable prompt."](images/Part1-terraform/terraformavarprompt.png)
+!["Terraform variable prompt."](images/Part1-terraform/terraformvarprompt.png)
 
 This is obviously not the most efficient deployment strategy and is also error prone, we will look at a better deployment option in the next step.
 
