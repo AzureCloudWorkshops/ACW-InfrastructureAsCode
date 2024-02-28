@@ -573,7 +573,7 @@ Another great tool that can help you get started is [NubesGen.com](https://nubes
 
 There is another way to get the resource to Bicep in VSCode.  You can select a resource by Id and generate the bicep using Visual Studio Code.
 
-- [VS Code Resource to Bicep]()
+- [VS Code Resource to Bicep](https://msftplayground.com/2021/12/export-existing-azure-resources-to-bicep/)
 
 ## Breakouts
 
