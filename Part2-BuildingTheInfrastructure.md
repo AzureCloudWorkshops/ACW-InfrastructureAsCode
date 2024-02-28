@@ -248,7 +248,7 @@ In order to test the automation for Terraform you first need to create a couple 
 
 1. Use the appropriate following yaml file for your deployment type.
 
-    Bicep:  
+#### Bicep:  
 
 ```yaml
 name: "Bicep Deploy Resources"
@@ -302,7 +302,7 @@ jobs:
           failOnStdErr: true
 ```
 
-Terraform:  
+#### Terraform:  
 
 ```yaml
 name: "Terraform Deploy Resources"
@@ -414,15 +414,14 @@ jobs:
 
 >**Note:** If doing bicep, you don't currently have a `deployContactWebArchitecture.bicep` file so you'll get a failure.  For Terraform you should see a plan with no changes being generated.
 
-1. For Bicep: Even though the run failed, validate login was successful
+#### Additional steps for Bicep  
+Even though the run failed, validate login was successful
 
-    Before moving forward, you should have a successful login in your workflow.  If that did not work, then you need to make sure the three secrets are correct and that you ran from the main branch or with the `dev` environment credential (both should have been the case - you were likely on your main branch and you put the `dev` environment variable in if you copied the code above).
+Before moving forward, you should have a successful login in your workflow.  If that did not work, then you need to make sure the three secrets are correct and that you ran from the main branch or with the `dev` environment credential (both should have been the case - you were likely on your main branch and you put the `dev` environment variable in if you copied the code above).
 
     !["No file but login was successful"](images/Part2-common/image0022-loginsuccessjustneedfilebicep.png)  
 
 1. Add appropriate infrastructure file(s) to your repo.
-
-    For Bicep:  
 
     - Create a file called `deployContactWebArchitecture.bicep` in the `iac` folder of your repo.
     - Create a file called `deployContactWebArchitecture.parameters.json` in the `iac` folder of your repo.
@@ -460,17 +459,19 @@ jobs:
 
     >**Note:** The bicep files above can be found in the `iac/bicep/Part2/starter` folder of this repo.
 
-    For Terraform:  
-    
-    - Create a file called `terraform.tfvars` in the `Part2` folder of your repo.
-    - Create a file called `variables.tf` in the `Part2` folder of your repo.
-    - Ensure you have a resource group and container for the state file in your subscription as follows:
-    
-        - RG: `rg-terraform-github-actions-state`
-        - Storage Account: `tfghactionsYYYYMMDDxxx`
-        - container: `tfstatepart2`
+#### Additional steps for Terraform:  
 
-    Add the following code to your `deployContactWebArchitecture.tf` file:
+1. Complete the work for Terraform to run successfully.
+
+- Create a file called `terraform.tfvars` in the `Part2` folder of your repo.
+- Create a file called `variables.tf` in the `Part2` folder of your repo.
+- Ensure you have a resource group and container for the state file in your subscription as follows:
+
+    - RG: `rg-terraform-github-actions-state`
+    - Storage Account: `tfghactionsYYYYMMDDxxx`
+    - container: `tfstatepart2`
+
+1. Add the following code to your `deployContactWebArchitecture.tf` file:
 
 ```terraform  
 terraform {
@@ -503,14 +504,14 @@ resource "azurerm_resource_group" "rg-contact-web-application" {
 }
 ```  
 
-    Add the following to your `terraform.tfvars` file:
+1. Add the following to your `terraform.tfvars` file:
 
 ```terraform  
 resource_group_name = "ContactWebApplicationRG"
 location            = "eastus"
 ```   
 
-    Add the following to your `variables.tf` file:
+1. Add the following to your `variables.tf` file:
 
 ```terraform
 variable "resource_group_name" {
@@ -546,7 +547,6 @@ variable "location" {
 
 Do not move forward if you do not have a working IaC pipeline that executes a subscription-level deployment using your service principal credentials in your Azure subscription.  You should have a main file for deployment orchestration and it should ensure that the resource group exists in your subscription.  If you do not have this, you will not be able to complete the rest of this workshop/walkthrough.
 
-
 ## One last piece of information
 
 There is a trick that you can use when trying to deploy resources to Azure that you need to be aware of.  For example, suppose that you want to deploy an app service with a bunch of configuration settings.  If you are unsure how to get started, go to the portal and actually deploy the app service.  Once you have it deployed, on the left-hand side of the app service, click `Export Template`
@@ -568,6 +568,12 @@ az bicep decompile --file template.json
 ### NubesGen.com
 
 Another great tool that can help you get started is [NubesGen.com](https://nubesgen.com/) which is a resource that lets you quickly generate terraform files for an Azure Deployment.
+
+### Get Resource to Bicep
+
+There is another way to get the resource to Bicep in VSCode.  You can select a resource by Id and generate the bicep using Visual Studio Code.
+
+- [VS Code Resource to Bicep]()
 
 ## Breakouts
 
