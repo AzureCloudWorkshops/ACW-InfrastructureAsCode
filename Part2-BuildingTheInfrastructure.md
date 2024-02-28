@@ -240,6 +240,8 @@ In order to test the automation for Terraform you first need to create a couple 
 - Create a `deployContactWebArchitecture.tf` and providers.tf file in the `Part2` folder as well.
 - Push the files to your repo. 
 
+### Create GitHub Action to deploy resources  
+
 1. Navigate to the `Actions` tab of your repository and select `set up a workflow yourself`.
 
     !["Actions -> Set up a workflow yourself"](images/Part2-common/image0021-actionworkflow.png)  
