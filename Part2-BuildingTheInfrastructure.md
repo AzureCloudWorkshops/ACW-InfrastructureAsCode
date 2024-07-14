@@ -232,7 +232,7 @@ Do not move forward until you have a service principal with the correct permissi
 
 With everything in place to deploy, it's time to get the automation in place to execute the deployment.  This will be done via GitHub Actions.  Since the choice exists to do this with either bicep or terraform, this walkthrough will show how to do this with both.  The only part that will be different is the deployment action and the actual files used for deployment.  The rest of the workflow will generally be the same.
 
-### Create starter files (Terraform only)
+### Step 1: Terrform only (bicep skip this step): Create starter files 
 
 In order to test the automation for Terraform you first need to create a couple files to get you started:
 
@@ -240,15 +240,15 @@ In order to test the automation for Terraform you first need to create a couple 
 - Create a `deployContactWebArchitecture.tf` and providers.tf file in the `Part2` folder as well.
 - Push the files to your repo. 
 
-### Create GitHub Action to deploy resources  
+### Step 2: (Everyone) Create GitHub Action to deploy resources  
 
 1. Navigate to the `Actions` tab of your repository and select `set up a workflow yourself`.
 
     !["Actions -> Set up a workflow yourself"](images/Part2-common/image0021-actionworkflow.png)  
 
-1. Use the appropriate following yaml file for your deployment type.
+1. Use the appropriate following yaml file for your deployment type (Bicep: 2a, Terraform 2b).
 
-#### Bicep:  
+#### Step 2a - Bicep:  
 
 ```yaml
 name: "Bicep Deploy Resources"
@@ -302,7 +302,7 @@ jobs:
           failOnStdErr: true
 ```
 
-#### Terraform:  
+#### Step 2b - Terraform:  
 
 ```yaml
 name: "Terraform Deploy Resources"
@@ -414,7 +414,12 @@ jobs:
 
 >**Note:** If doing bicep, you don't currently have a `deployContactWebArchitecture.bicep` file so you'll get a failure.  For Terraform you should see a plan with no changes being generated.
 
-#### Additional steps for Bicep  
+#### Step 3: Additional steps
+
+Go to the appropriate step (3a for bicep, 3b for terraform) based on the deployment type you are using.
+
+##### Step 3a: Bicep only  
+
 Even though the run failed, validate login was successful
 
 Before moving forward, you should have a successful login in your workflow.  If that did not work, then you need to make sure the three secrets are correct and that you ran from the main branch or with the `dev` environment credential (both should have been the case - you were likely on your main branch and you put the `dev` environment variable in if you copied the code above).
@@ -459,7 +464,7 @@ Before moving forward, you should have a successful login in your workflow.  If 
 
     >**Note:** The bicep files above can be found in the `iac/bicep/Part2/starter` folder of this repo.
 
-#### Additional steps for Terraform:  
+##### Step 3b: Terraform only  
 
 1. Complete the work for Terraform to run successfully.
 
@@ -525,6 +530,8 @@ variable "location" {
 }
 ```
 
+### Step 4: Commit and push the changes
+
 1. Check in your changes and ensure automation deployment completes successfully
 
     You should now see the deployment work as expected, and your action should run to completion and create/ensure the resource group exists as expected.
@@ -547,7 +554,9 @@ variable "location" {
 
 Do not move forward if you do not have a working IaC pipeline that executes a subscription-level deployment using your service principal credentials in your Azure subscription.  You should have a main file for deployment orchestration and it should ensure that the resource group exists in your subscription.  If you do not have this, you will not be able to complete the rest of this workshop/walkthrough.
 
-## One last piece of information
+## Additional Information
+
+### Convert Arm to Bicep  
 
 There is a trick that you can use when trying to deploy resources to Azure that you need to be aware of.  For example, suppose that you want to deploy an app service with a bunch of configuration settings.  If you are unsure how to get started, go to the portal and actually deploy the app service.  Once you have it deployed, on the left-hand side of the app service, click `Export Template`
 
@@ -564,6 +573,24 @@ To convert to bicep
 ```bash
 az bicep decompile --file template.json
 ```
+
+### Use Bicep Tools in VSCode to generate bicep from an existing resource
+
+In the azure portal, find the resource you want to deploy and then find the resource ID for the resource (typically under `properties` except in storage accounts where it is harder to find).
+
+The resource ID is the unique identifier for the resource in Azure.  You can use this to generate a bicep file in Visual Studio Code.  The ID should be in the pattern:
+
+```bash
+/subscriptions/<subscriptionId>/resourceGroups/<resourceGroupName>/providers/<providerName>/<resourceType>/<resourceName>
+```
+
+![Get Resource ID from Azure](images/Part2-common/image0029-getresourceidazure.png)  
+
+Or something very similar.  
+
+Create a file in your folder called `yourresourcename.bicep`.  Replace `yourresourcename` with something useful like `mystorage` or `mywebapp`, etc. In VSCode, you can then hit `F1` and bring up the bicep tools by typing Bicep (you must be focused on the new, empty bicep file).  Select `Bicep: Insert Resource` and then paste in the resource ID. Hit `Enter` and this will generate the bicep for you.
+
+![Bicep Insert Resource](images/Part2-common/image0030-insertresource.png)
 
 ### NubesGen.com
 

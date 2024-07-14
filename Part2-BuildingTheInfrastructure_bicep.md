@@ -136,6 +136,8 @@ In this step you'll create the parameters file for the SQL Server and database
 
 1. Add the following text to the parameters file.
 
+    First add the parameters to the json
+
 ```json
 {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
@@ -165,9 +167,9 @@ In this step you'll create the parameters file for the SQL Server and database
     }
 }
 ```  
-
-    This file is not actually necessary but will allow you to manually run a single deployment of just the database if you want to test it.  Additionally, I like to keep these around so that I can see what parameters each one adds to the main deployment.
-
+  
+>**Note:** This file is not actually necessary but will allow you to manually run a single deployment of just the database if you want to test it.  Additionally, I like to keep these around so that I can see what parameters each one adds to the main deployment.  
+  
 1. Copy the parameters for the sql server into the main `deployContactWebArchitecture.parameters.json` file.
 
     Ensure that your parameters file looks like the following:
@@ -207,7 +209,54 @@ In this step you'll create the parameters file for the SQL Server and database
 
 >**Note:** Replace `10.10.10.10` with your actual public IP address so you can access the server from the portal or from SSMS if you need to.  In the real world you would likely not include this firewall rule.
 
-### Step 3 - Check in and deploy
+### Step 3 - Add the deployment to the main deployment file
+
+In order to deploy the SQL Server and database, you need to add the deployment to the main deployment file.
+
+1. Add the deployment to the main deployment file
+
+    Add the following to the main deployment file:
+
+```bicep
+module contactWebDatabase 'azureSQL.bicep' = {
+  name: '${sqlServerName}-${sqlDatabaseName}-${uniqueIdentifier}'
+  scope: contactWebResourceGroup
+  params: {
+    location: contactWebResourceGroup.location
+    uniqueIdentifier: uniqueIdentifier
+    sqlServerName: sqlServerName
+    sqlDatabaseName: sqlDatabaseName
+    sqlServerAdminLogin: sqlServerAdminLogin
+    sqlServerAdminPassword: sqlServerAdminPassword
+    clientIPAddress: clientIPAddress
+  }
+}
+```  
+
+1. Add the missing parameters to and/or ensure the following parameters are at the top of the file after the `location` parameter:
+
+```bicep
+targetScope = 'subscription'
+
+param rgName string
+param location string
+
+@minLength(11)
+@maxLength(11)
+@description('YYYYMMDD with your initials to follow (i.e. 20291231acw)')
+param uniqueIdentifier string
+
+param sqlServerName string
+param sqlDatabaseName string
+param sqlServerAdminLogin string
+@secure()
+param sqlServerAdminPassword string
+param clientIPAddress string
+```  
+
+>**Note:** make sure that all the parameters are in the `deployContactWebArchitecture.parameters.json` file with the values set as expected.  
+
+### Step 4 - Check in and deploy
 
 Check in the changes and the deployment should run automatically.  
 
