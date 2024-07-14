@@ -243,7 +243,7 @@ With everything in place to deploy, it's time to get the automation in place to 
 In order to test the automation for Terraform you first need to create a couple files to get you started:
 
 - Create a folder called `Part2` inside the terraform folder you created in part 1 of this workshop.
-- Create a `deployContactWebArchitecture.tf` and providers.tf file in the `Part2` folder as well.
+- Create a `deployContactWebArchitecture.tf` and `providers.tf` file in the `Part2` folder as well.
 - Push the files to your repo. 
 
 ### Step 2: (Everyone) Create GitHub Action to deploy resources  
@@ -430,7 +430,7 @@ Even though the run failed, validate login was successful
 
 Before moving forward, you should have a successful login in your workflow.  If that did not work, then you need to make sure the three secrets are correct and that you ran from the main branch or with the `dev` environment credential (both should have been the case - you were likely on your main branch and you put the `dev` environment variable in if you copied the code above).
 
-    !["No file but login was successful"](images/Part2-common/image0022-loginsuccessjustneedfilebicep.png)  
+!["No file but login was successful"](images/Part2-common/image0022-loginsuccessjustneedfilebicep.png)  
 
 1. Add appropriate infrastructure file(s) to your repo.
 
@@ -596,7 +596,7 @@ Or something very similar.
 
 Create a file in your folder called `yourresourcename.bicep`.  Replace `yourresourcename` with something useful like `mystorage` or `mywebapp`, etc. In VSCode, you can then hit `F1` and bring up the bicep tools by typing Bicep (you must be focused on the new, empty bicep file).  Select `Bicep: Insert Resource` and then paste in the resource ID. Hit `Enter` and this will generate the bicep for you.
 
-![Bicep Insert Resource](images/Part2-common/image0030-insertresource.png)
+![Bicep Insert Resource](images/Part2-common/image0030-bicepinsertresource.png)  
 
 ### NubesGen.com
 
