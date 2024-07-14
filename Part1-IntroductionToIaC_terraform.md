@@ -42,7 +42,7 @@ There are 3 main commands that we will explore in this section:
 
 ## Task 1 - Create your first Terraform file to deploy a storage account to an existing resource group
 
-To get started, let's create our first Terraform file. The overall goal for this activity is to create a resource group and a storage account.  We'll do this in two steps.  First, we'll create a resource group, then we'll create a storage account. As we're going, we will create the recommended file structure mentioned above while learning about using variables and outputs, as well as how to create and use additional files as modules.
+To get started, let's create our first Terraform file. The overall goal for this activity is to create the files needed to deploy a storage account. During this activity we will create the recommended file structure mentioned above while learning about using variables and outputs, as well as how to create and use additional files as modules.
 
 >**Note:** for this activity, I'm using VSCode with the Terraform extension.  Additionally, I've created a new repository at GitHub which has the starter web application code in it and will be where I'm generating screenshots.  For this reason, if you haven't already, you need a GitHub repository where you can store your code and your Terraform files.  For simplicity, you can fork this repo: [https://github.com/AzureCloudWorkshops/ACW-InfrastructureAsCode_Workshop](https://github.com/AzureCloudWorkshops/ACW-InfrastructureAsCode_Workshop/blob/main/README.md).
 
@@ -136,6 +136,8 @@ resource "azurerm_storage_account" "cm_stg_acct" {
 }
 ```
 
+>**Note:** The resource group name and location must match the values you provided [here](Part1-IntroductionToIaC.md#step-2---create-the-resource-group).
+
 ## Task 2 - Run the deployment
 
 As mentioned in part 1, there are 3 commands that make up the basic Terraform workflow:
@@ -182,7 +184,7 @@ This is the result:
 
 ### Completion Check
 
-You have a storage account in your resource group that was named as you intended.
+You have a storage account in your resource group with a name that matches the value provided in the main.tf file.
 
 ## Task 4 - Create providers file
 
@@ -353,9 +355,9 @@ In this module you will learn to use local variables and functions to create a u
 
 ### Step 1 - Add a unique identifier input variable to the storage account
 
-Since the storage account name needs to be unique across all resources in assure We will now add a unique identifier section to the storage account name no comply with this requirement.
+Since the storage account name needs to be unique across all resources in Azure we will now add a unique identifier section to the storage account name to comply with this requirement.
 
-1. Add a `uniqueidentifier` variable to your variables file.
+1. Add a `uniqueIdentifier` variable to your variables file.
 
 2. Assign a value in the tfvars file with the following format: YYYYMMDDabc.
 
@@ -393,28 +395,32 @@ Execute the `terraform apply` command, once it is completed you should see the n
 
 ### Step 3 - Use a provider to add a unique string to the storage account name
 
-If you completed the Bicep section of this workshop, you will recall that the `uniquestring` function allows you to generate a string that can help make resource names unique. In this step, you will use a community provider to access similar functionality in Terraform. 
+If you completed the Bicep section of this workshop, you will recall that the `uniquestring` function allows you to generate a string that can help make resource names unique. In this step, you will use a provider to access similar functionality in Terraform. 
 
-1. Add the following to the providers.tf file:
+1. Add the following after the azurerm element in the providers.tf file:
 
 ```text
-arm2tf = {
-  source  = "cloud-maker-ai/arm2tf"
-  version = "0.2.2"
+random = {
+  source = "hashicorp/random"
+  version = "3.6.2"
 }
 ```
-2. Generate a unique id in main.tf file by adding the following block:
+2. Generate a unique id in main.tf file by adding the following block to your main.tf file:
 
 ```text
-resource "arm2tf_unique_string" "uniqueid" {
-  input = [data.azurerm_resource_group.{YOUR_RESOURCE_GROUP_RESOURCE}.name]
+resource "random_string" "random" {
+  length           = 10
+  special          = false
+  lower            = true
+  upper            = false 
 }
 ```
+>**Note:** The name for storage accounts does not allow any special characters so we are forcing the generated string to comply to this. You can check the [documentation](https://registry.terraform.io/providers/hashicorp/random/latest/docs) for the random provider for additional configuration options. 
 
-3. Add a new local variable called `storageAccountNameFull` and assign the following value:
+3. Add a new local variable called `storageAccountNameUnique` and assign the following value:
 
 ```text
-${var.storageAccountName}${var.uniqueIdentifier}${arm2tf_unique_string.uniqueid.id}
+storageAccountNameUnique = "${var.storageAccountName}${var.uniqueIdentifier}${random_string.random.result}"
 ```
 4. Add a new storage account resource block and assign the name using the new variable created.
 
@@ -433,7 +439,7 @@ Terraform has multiple built-in functions that can be used to transform and comb
 ```text
 substr(string, offset, length)
 ```
-1. Use the `substr` function to ensure the value of the `storageAccountNameUnique` variable is only 24 characters.
+1. Use the `substr` function to ensure the value of the `storageAccountNameFullUnique` variable is only 24 characters.
 
 2. Execute the deployment again, you should see the new storage account in the Azure portal.
 
@@ -486,16 +492,16 @@ So far, we have been working out of our main module. In application deployments 
 In our previous deployment we were using information from an existing resource group, however, in a real world scenario we might have to create the entire infrastructure including the resource group. In this step we will create a new template that deploys a new resource group, lets see how much you remember!
 
 1. Create a new folder under the `terraform` folder and add the following files:
-- providers.tf
-- variables.tf
-- main.tf
-- terraform.tfvars
+  - providers.tf
+  - variables.tf
+  - main.tf
+  - terraform.tfvars
 
-2. Add the `azurerm` and `arm2tf` providers to the providers.tf file.
+2. Add the `azurerm` and `random` providers to the providers.tf file.
 
 3. Add the following variables:
-- resourceGroupName: string type, not nullable.
-- location: string type, not nullable, validation to only allow `East US` as a value (optional).
+  - resourceGroupName: string type, not nullable.
+  - location: string type, not nullable, validation to only allow `East US` as a value (optional).
 
 4. Assign values to the variables in the terraform.tfvars file.
 
@@ -511,9 +517,9 @@ Now that we have our resource group, lets create a module for the storage accoun
 
 2. Create a main.tf and variables.tf files in the storageAccount folder.
 
-3. Add the following variables to the variables.tf file for the storage account module: `storageAccountNameEnv`, `resourceGroupName`, `location`.
+3. Copy any of the storage account resource blocks from the root module created in the previous exercise and replace the values assigned to the `name`, `resource_group_name` and `location` with variables.
 
-4. Copy the resource block for the `cm_stg_acct_env` storage account from the root module used in the previous exercise and replace the `name`, `resource_grup_name` and `location` with the input variables declared for the storage account module.
+4. Add the variables specified in the previous step to the variables.tf file.
 
 5. Add a reference to the storage account module by adding the following block:
 

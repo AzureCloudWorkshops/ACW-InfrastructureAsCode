@@ -1,9 +1,12 @@
 locals {  
-  storageAccountNameEnv = substr("${var.storageAccountName}${var.uniqueIdentifier}${var.environment}${arm2tf_unique_string.uniqueid.id}",0,24)
+  storageAccountNameEnv = substr("${var.storageAccountName}${var.uniqueIdentifier}${var.environment}${random_string.random.result}",0,24)
 }
 
-resource "arm2tf_unique_string" "uniqueid" {
-  input = [azurerm_resource_group.iac_rg.name]
+resource "random_string" "random" {
+  length           = 10
+  special          = false
+  lower            = true
+  upper            = false 
 }
 
 resource "azurerm_resource_group" iac_rg {
