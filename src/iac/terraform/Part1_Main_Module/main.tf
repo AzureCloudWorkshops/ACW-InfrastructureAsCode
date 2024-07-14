@@ -1,15 +1,18 @@
 locals {
   storageAccountNameFull = "${var.storageAccountName}${var.uniqueIdentifier}"
-  storageAccountNameUnique = substr("${var.storageAccountName}${var.uniqueIdentifier}${arm2tf_unique_string.uniqueid.id}",0,24)
-  storageAccountNameEnv = substr("${var.storageAccountName}${var.uniqueIdentifier}${var.environment}${arm2tf_unique_string.uniqueid.id}",0,24)
+  storageAccountNameUnique = substr("${var.storageAccountName}${var.uniqueIdentifier}${random_string.random.result}",0,24)
+  storageAccountNameEnv = substr("${var.storageAccountName}${var.uniqueIdentifier}${var.environment}${random_string.random.result}",0,24)
+}
+
+resource "random_string" "random" {
+  length           = 10
+  special          = false
+  lower            = true
+  upper            = false 
 }
 
 data "azurerm_resource_group" "data_rg" {
   name = var.resourceGroupName
-}
-
-resource "arm2tf_unique_string" "uniqueid" {
-  input = [data.azurerm_resource_group.data_rg.name]
 }
 
 resource "azurerm_storage_account" "cm_stg_acct" {

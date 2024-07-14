@@ -5,24 +5,24 @@ terraform {
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~>3.0"      
-    }
-    random = {
-      source = "hashicorp/random"
-      version = "3.6.2"
-    }    
+    }       
   }
 
   backend "azurerm" {
     resource_group_name  = "rg-terraform-github-actions-state"
     storage_account_name = "tfghactions20241231sam"
-    container_name       = "tfstatepart1"
+    container_name       = "tfstatepart2"
     key                  = "terraform.tfstate"
     use_oidc             = true
   }
 }
 
 provider "azurerm" {
-  features {    
+  features {
+    app_configuration {
+      purge_soft_delete_on_destroy = true
+      recover_soft_deleted         = true
+    }
   }
   use_oidc = true
 }
