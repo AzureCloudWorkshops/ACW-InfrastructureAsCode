@@ -80,8 +80,6 @@ To allow GitHub Actions to execute against this service principal, you will need
 
 1. Click on the `Federated Credentials` blade on the left side of the screen of the User-Managed identity.
 
-    Then select `Federated credentials` at the middle of the screen.
-
     Then select `Add credential`.
 
     !["Federated Credentials"](images/Part2-common/umi/image0003-AddFederatedCredential_start.png)  
@@ -165,7 +163,7 @@ In order for the identity to deploy to Azure, it needs to have the correct permi
 
 1. Add `Members`
 
-    Select `Members` -> leave the default of `User, group, or service principal` and hit the `+ Select members` button.
+    Select `Managed Identity` and hit the `+ Select members` button right under the radio button for access selection.
 
     Find the managed identity you created in the previous task and select it.  Then hit `Select`.
 
@@ -216,13 +214,11 @@ Once this is completed, you will be able to check in code changes and rely on th
     - Secret name: `AZURE_TENANT_ID`
     - Value: `<your tenant id>`
 
-    >**Note:** Your subscription ID can be easily obtained from almost any resource or by running the cli command `az account show` (field: `id`) If you run `az account show` you will also get your Tenant Id (field: `tenantId` not `homeTenantId` which could be different).  Your tenant and client id's can be obtained from the overview screen of your app registration in the portal and you likely copied them earlier in this workshop.  You can also get your subscription ID from the portal -> Subscriptions -> overview blade.
+    >**Note:** Your subscription ID can be easily obtained from almost any resource or by running the cli command `az account show` (field: `id`) If you run `az account show` you will also get your Tenant Id (field: `tenantId` not `homeTenantId` which could be different).  Your tenant and client id's can be obtained from the overview screen of your user managed identity (shown earlier) in the portal - you likely already copied them earlier in this workshop. 
 
-    !["Client ID"](images/Part2-common/image0017-clientid1.png)
+    !["adding Client ID secret"](images/Part2-common/image0017-clientid1.png)
 
-    !["Client ID and Tenant ID"](images/Part2-common/image0018_clientId2tenantid.png)  
-
-    !["Subscription ID"](images/Part2-common/image0019-SubscriptionId.png)  
+    Make sure to add all three secrets.
 
 1. Validate that you have the three secrets ready to go.
 
@@ -234,7 +230,9 @@ Once this is completed, you will be able to check in code changes and rely on th
 
 ## Completion check
 
-Do not move forward until you have a service principal with the correct permissions to deploy to your subscription and you have the three secrets in place in your GitHub repository as you will not be able to complete the rest of this workshop/walkthrough without these in place.
+Do not move forward until you have a managed identity with the correct permissions to deploy to your subscription and you have the three secrets in place in your GitHub repository as you will not be able to complete the rest of this workshop/walkthrough without these in place.
+
+Additionally, for your managed identity, you should have set at least one federated credential (branch) so that you can trigger the deployment from the `main` branch of your repository.  If you want to deploy from other branches, you will want to set up an environment credential as well.
 
 ## Task 4 - Create the automation action to execute the deployment
 
