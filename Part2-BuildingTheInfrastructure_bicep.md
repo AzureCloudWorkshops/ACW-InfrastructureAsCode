@@ -290,7 +290,7 @@ Create the parameters file.
     Create a new file in the `iac` folder called 
 
     ```bash
-    analyticsWorkspace.parameters.json
+    logAnalyticsWorkspace.parameters.json
     ```  
 
 1. Add the following text to the parameters file.  
