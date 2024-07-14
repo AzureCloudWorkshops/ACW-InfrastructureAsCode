@@ -76,7 +76,7 @@ The UMI can be created in any resource group. For simplicity, you can use the sa
 
 ### Step 2: Create Federated Credentials
 
-To allow GitHub Actions to execute against this service principal, you will need to create federated credentials.
+To allow GitHub Actions to execute against this service principal, you will need to create federated credentials.  
 
 1. Click on the `Federated Credentials` blade on the left side of the screen of the User-Managed identity.
 
@@ -88,15 +88,15 @@ To allow GitHub Actions to execute against this service principal, you will need
 
 1. Create the scenario for GitHub Actions
 
-    For the `Federeated credential scenario` select `GitHub Actions deploying Azure Resources`.
+    For the `Federated credential scenario` select `GitHub Actions deploying Azure Resources`.
 
-    For the Connect your GitHub account section, you will need to authorize your Azure Subscription and GitHub to talk to one another.
+    For the `Connect your GitHub account` section, you will need to authorize your Azure Subscription and GitHub to talk to one another.
 
-    First, you will need your organization name and your repository name.  Please note that in the images below the values for the repository name and organization are placeholders.  You will need to replace them with your own values based on your account information and whatever you named the repo where you will be coding your IaC files. The repo I used in these images for creating the credential is `` and my organization is `blgorman`.
+    First, you will need your organization name and your repository name.  Please note that in the images below the values for the repository name and organization are placeholders.  You will need to replace them with your own values based on your account information and whatever you named the repo where you will be coding your IaC files. The repo I used in these images for creating the credential is `InfrastructureAsCodeACWWork` and my organization is `blgorman`.
 
     >**Note:** The organization is typically your github user account name (in the URL of your github account, the part right after `https://www.github.com/`). The repo name follows that user name. 
 
-    Then enter the repository name where your code for the contact web application is located.  My repository is `InfrastructureAsCodeACWWork`.  You need to put the **EXACT** name of your repository here or it will not work.
+    Then enter the repository name where your code for the contact web application is located.  You need to put the **EXACT** name of your repository here or it will not work.
 
     Select entity type: `Branch`  
 
@@ -110,7 +110,7 @@ To allow GitHub Actions to execute against this service principal, you will need
 
     >**Important**: `yourorg` should be your github username and `yourrepo` should be the name of the repository where you are storing your IaC files.  The `main` branch is the default branch for the repository.  This path should be generated for you.
 
-    !["Federated Credential Scenario"](images/Part2-common/umi/image0004-federatedcredentialscenario.png)
+    !["Federated Credential Scenario"](images/Part2-common/umi/image0004-githubactionsdeployingazureresources.png)  
 
     Name the credential something that makes sense to you
 
