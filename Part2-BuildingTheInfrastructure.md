@@ -2,7 +2,6 @@
 
 Part 2 of this workshop will teach you how to leverage permissions and GitHub actions to complete a fully automated IaC Pipeline in your azure subscription to host your web solution in an Azure App Service.
 
-
 ## Overall Goals of Part 2
 
 In part 2 of this workshop, we're going to get the entire infrastructure deployed to host a web application in Azure. This will include the following resources:
@@ -24,64 +23,58 @@ All of this will be done from GitHub Actions, not from the command line.  You ca
 
 ## Deployment Credentials
 
-In order to deploy to the solution, you'll need to have the correct credentials in place on your subscription.  You will do this by creating a service principal and assigning it the correct permissions. 
+In order to deploy to the solution, you'll need to have the correct credentials in place on your subscription.  You will do this by creating a user-managed identity at Azure and assigning it the correct permissions on the subscription (or group if doing a deployment to a specific resource group instead of a subscription-level deployment). 
 
-You will then need to leverage the secrets from the service principal in GitHub Actions to deploy the infrastructure. (you will not be doing this part from the command line - but you can still deploy from the command line to test things as needed).  The end goal will be a full, working IAC pipeline that deploys the infrastructure.  
+You will then need to leverage the secrets from the managed identity in GitHub Actions to deploy the infrastructure.  The end goal will be a full, working IAC pipeline that deploys the infrastructure.  For the rest of the workshop, deployments should mainly run from actions, however you can still run the CLI commands if you need to test something out or if you can't get the action to deploy with credentials based on limitations in your subscription/azure rights.
 
 It will be incredibly important to manage the order of deployments for this infrastructure, because you need a Key Vault to have secrets, but you can't set the secret until you have the value for the connection string and the app service needs to have a principal that can connect to Key Vault and get the secrets.  All of this to say that when building your pipeline architecture, you have to do a lot of planning and you may need to do things in parts - i.e. deploy one resource, deploy a second resource, then come back to the first and update it with the second resource's information.
 
-## Task 1 - Create a service principal
+That being said, what is presented for deployment in this workshop is only one of a few possible solutions, and differs between the deployment using bicep and the deployment using terraform for practical reasons and to show the variety of ways that you can deploy resources in Azure, even when dependencies are present.
 
-To get started, in order to deploy to Azure you will need to create a service principal/app registration.  This can be accomplished via the command line, however it is incredibly easy to do in the portal.  For that reason, this workshop will show how to do this in the portal in order to limit/minimize the number of problems that could result from doing it incorrectly via the command line.
+## Task 1 - Create a user-managed identity and federated credentials for deployment 
 
-1. Navigate to the Azure Portal and login with your credentials.
+In this first task, you will create a user-managed identity that will be used to deploy the architecture and application.   
 
-    Get logged in to the Azure portal.
+>**Consider:** Before moving on, consider what you might do to be more secure than just using a user-managed identity with contributor access on the subscription.
 
-1. Navigate to the App Registrations blade.
+Assuming you would have a subscription per environment in real-world projects, you would duplicate the efforts on the production subscription and the development subscription.  
 
-    Type `App Registrations` in the search bar and select the `App Registrations` blade.
+### Step 1: Create a user-managed identity in Azure for deployment
 
-    !["App Registrations"](images/Part2-common/image0000-AppRegistrations.png)  
+To begin, you will need to create a user-managed identity in Azure. This identity will be used to authenticate to Azure from GitHub Actions.
 
-1. Select `+ New Registration` at the top of the `App Registrations` blade.
+The UMI will be created in any resource group. For simplicity, you can use the same group for this workshop.  In the real world you might put these identities in their own group somewhere to keep track of all of them and easily manage RBAC around the identities. 
 
-    !["New Registration"](images/Part2-common/image0001-newregistration.png)  
+>**Note:** You need to have any resource group to store your UMI resource. If you don't have one already, create a resource group to store your UMI resource.  
 
-1. Enter a name such as `iac-workshop-contactweb-dev` and select `Register`.
+>**Note:** you could do these things in other ways (i.e. App Registration - the old way, or via the cli to create resources) but the easiest, most secure, and preferred way with all the credentials and permissions in one place is to use a user-managed identity created in the portal, wired directly to your GitHub repo.  
 
-    Enter a name that makes sense for your service principal.  For this you are automating your IAC.  You would likely create one per environment (per subscription).  For this workshop, you can use `iac-workshop-contactweb-dev` as the name so you can remember what it is for.  For this workshop we will proceed as if all of this is being done in a development environment.  To add a production environment, you would repeat this process and create a new service principal for production, and you could leverage the same GitHub actions to deploy to production as a second task in just one overall pipeline.
+1. Log in to the azure portal, navigate to Managed Identities, and create a new user-managed identity.  Give it a name that makes sense for the app service you are deploying to, and make sure it is in the same subscription as the app service you are deploying to.
 
-    ```bash
-    iac-workshop-contactweb-dev
-    ```  
+    - Name: `mi-deployToAzureFromGitHubActions` (or whatever makes sense for your app service)
+    - Resource Group: `your-resource-group`
+    - Subscription: `your-subscription`
+    - Region: `your-region`
 
-    Leave all of the other settings as their defaults - do not modify anything else on this screen.  Hit `Register` at the bottom of the screen.
+    ![Create User Managed Identity](images/0001_CreateArchitectureDeployment/Step1Task1/image0001-createmanagedidentity.png)   
 
-    !["Register"](images/Part2-common/image0002-servicePrincipalAppRegistration.png)  
+1. Validate that you have the UMI created in the portal.
 
-1. Gather the important id's for later use
+    ![Validate User Managed Identity](images/0001_CreateArchitectureDeployment/Step1Task1/image0002-validateumicreated.png)
 
-    For GitHub Actions, you will need the following information from the overview screen:
+    >**Important:** Make sure to make note of the `Client ID` and `Subscription ID` of the identity, as this will be used later. This `Client ID` and `Subscription ID` in combination with the `Tenant ID` will be used to validate the federated credentials, log in to azure, and authorize from GitHub Actions secrets.
 
-    - Application (client) ID
-    - Directory (tenant) ID
-
-    Make sure to capture these somewhere so you can use them later.  Of course you can always come back here to get these values later if necessary.  
-
-    !["Overview for App Registration"](images/Part2-common/image0003-applicationAndTenantIds.png)  
-
-1. Create Federated Credentials
+### Step 2: Create Federated Credentials
 
     To allow GitHub Actions to execute against this service principal, you will need to create federated credentials.
 
-    Click on the `Certificates & secrets` blade on the left side of the screen.
+    Click on the `Federated Credentials` blade on the left side of the screen of the User-Managed identity.
 
     Then select `Federated credentials` at the middle of the screen.
 
     Then select `Add credential`.
 
-    !["Federated Credentials"](images/Part2-common/image0004-creatingACredential.png)  
+    !["Federated Credentials"](images/Part2-common/...tbd)  
 
 1. Create the scenario for GitHub Actions
 
@@ -173,7 +166,7 @@ In order for the principal to deploy to Azure, it needs to have the correct perm
     !["Role Exists"](images/Part2-common/image0014-roleexists.png)  
 
 
-## Task 2 - Set the GitHub Secrets
+## Task 3 - Set the GitHub Secrets
 
 With the Azure credentials in place, it's time to get the GitHub Actions set up to log in and run deployments against your Azure subscription.
 
@@ -228,7 +221,7 @@ Once this is completed, you will be able to check in code changes and rely on th
 
 Do not move forward until you have a service principal with the correct permissions to deploy to your subscription and you have the three secrets in place in your GitHub repository as you will not be able to complete the rest of this workshop/walkthrough without these in place.
 
-## Task 3 - Create the automation action to execute the deployment
+## Task 4 - Create the automation action to execute the deployment
 
 With everything in place to deploy, it's time to get the automation in place to execute the deployment.  This will be done via GitHub Actions.  Since the choice exists to do this with either bicep or terraform, this walkthrough will show how to do this with both.  The only part that will be different is the deployment action and the actual files used for deployment.  The rest of the workflow will generally be the same.
 
