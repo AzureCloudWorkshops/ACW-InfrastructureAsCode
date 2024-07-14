@@ -66,15 +66,15 @@ The UMI can be created in any resource group. For simplicity, you can use the sa
 
 ### Step 2: Create Federated Credentials
 
-    To allow GitHub Actions to execute against this service principal, you will need to create federated credentials.
+To allow GitHub Actions to execute against this service principal, you will need to create federated credentials.
 
-    Click on the `Federated Credentials` blade on the left side of the screen of the User-Managed identity.
+1. Click on the `Federated Credentials` blade on the left side of the screen of the User-Managed identity.
 
-    Then select `Federated credentials` at the middle of the screen.
+  Then select `Federated credentials` at the middle of the screen.
 
-    Then select `Add credential`.
+  Then select `Add credential`.
 
-    !["Federated Credentials"](images/Part2-common/...tbd)  
+  !["Federated Credentials"](images/Part2-common/umi/image0003-AddFederatedCredential_start.png)  
 
 1. Create the scenario for GitHub Actions
 
@@ -84,7 +84,7 @@ The UMI can be created in any resource group. For simplicity, you can use the sa
 
     Once you have done this, enter the organization name where your code for the contact web application is located.
 
-    >**Note:** The organization is typically your github user account name (in the URL of your github account, the part right after `https://www.github.com/`).  For example, my repo is here: `https://github.com/blgorman/InfrastructureAsCodeACWWork`, so my organization name is `blgorman`. 
+    >**Note:** The organization is typically your github user account name (in the URL of your github account, the part right after `https://www.github.com/`).  For example, my repo is here: `https://github.com/blgorman/InfrastructureAsCodeACWWork`, so my organization name is `blgorman` and the repo name is `InfrastructureAsCodeACWWork`. 
 
     Then enter the repository name where your code for the contact web application is located.  My repository is `InfrastructureAsCodeACWWork`.
 
@@ -110,7 +110,7 @@ The UMI can be created in any resource group. For simplicity, you can use the sa
             
 1. Once the add is completed, you will see the credential in the list of federated credentials.
 
-    !["Credential added"](images/Part2-common/image0006-federatedCredentialsMainBranch.png)
+    !["Credential added"](images/Part2-common/umi/image0006-credentialislisted.png)
 
 1. Additional credentials
 
