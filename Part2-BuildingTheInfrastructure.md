@@ -80,11 +80,11 @@ To allow GitHub Actions to execute against this service principal, you will need
 
 1. Click on the `Federated Credentials` blade on the left side of the screen of the User-Managed identity.
 
-  Then select `Federated credentials` at the middle of the screen.
+    Then select `Federated credentials` at the middle of the screen.
 
-  Then select `Add credential`.
+    Then select `Add credential`.
 
-  !["Federated Credentials"](images/Part2-common/umi/image0003-AddFederatedCredential_start.png)  
+    !["Federated Credentials"](images/Part2-common/umi/image0003-AddFederatedCredential_start.png)  
 
 1. Create the scenario for GitHub Actions
 
