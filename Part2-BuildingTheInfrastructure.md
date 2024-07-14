@@ -598,15 +598,13 @@ Create a file in your folder called `yourresourcename.bicep`.  Replace `yourreso
 
 ![Bicep Insert Resource](images/Part2-common/image0030-bicepinsertresource.png)  
 
+
+Original Blog:   
+- [VS Code Resource to Bicep](https://msftplayground.com/2021/12/export-existing-azure-resources-to-bicep/)
+
 ### NubesGen.com
 
 Another great tool that can help you get started is [NubesGen.com](https://nubesgen.com/) which is a resource that lets you quickly generate terraform files for an Azure Deployment.
-
-### Get Resource to Bicep
-
-There is another way to get the resource to Bicep in VSCode.  You can select a resource by Id and generate the bicep using Visual Studio Code.
-
-- [VS Code Resource to Bicep](https://msftplayground.com/2021/12/export-existing-azure-resources-to-bicep/)
 
 ## Breakouts
 
