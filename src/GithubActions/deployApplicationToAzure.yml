@@ -11,15 +11,19 @@ env:
   # set this to the dotnet version to use
   DOTNET_VERSION: '6.0.x' 
   # Put your app name here
-  AZURE_WEB_APP_NAME: 'ContactWeb-20291231acw' 
+  AZURE_WEB_APP_NAME: 'your-app-name-here' 
   # staging by default but you could change to Production if you are not creating a slot 
   AZURE_WEB_APP_SLOT: 'Production' 
   # leverage secrets for the umi credential
   AZURE_TENANT_ID:  ${{ secrets.AZURE_TENANT_ID }}
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   AZURE_CLIENT_ID_CONTACTWEB_DEV: '${{ secrets.AZURE_CLIENT_ID_CONTACTWEB_DEV }}'
-  #Working Directory
-  WORKING_DIRECTORY: 'src/ContactWebEFCore6' 
+  #Working Directory [must map to the location of your .NET Project]
+  WORKING_DIRECTORY: 'src/ContactWebEFCore6'  
+
+permissions:
+      id-token: write
+      contents: read
 
 jobs:  
   build-and-deploy:
