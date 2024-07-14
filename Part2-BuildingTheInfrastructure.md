@@ -49,9 +49,11 @@ The UMI can be created in any resource group. For simplicity, you can use the sa
 
 >**Note:** you could approach the deployments in multiple ways (i.e. App Registration - the old way, or via the cli to create resources) but the easiest, most secure, and preferred way with all the credentials and permissions in one place is to use a user-managed identity created in the portal, wired directly to your GitHub repo.  
 
-1. Log in to the azure portal, navigate to Managed Identities, and create a new user-managed identity.  Give it a name that makes sense for the app service you are deploying to, and make sure it is in the same subscription as the app service you are deploying to. 
+1. Create a new managed identity
 
->**NOTE:** The names and locations of these sample resources are placeholders.  You should use your own names and locations, and you should be doing something unique for the workshop.  For example, I'm creating `mi-deployContactWebtoAzureFromGitHubActions` in the `deploymentcommon` resource group in my own subscription and deployment region.  You should replace these important values with your own values to map to this workshop.
+    Log in to the azure portal, navigate to Managed Identities, and create a new user-managed identity.  Give it a name that makes sense for the app service you are deploying to, and make sure it is in the same subscription as the app service you are deploying to. 
+
+    >**NOTE:** The names and locations of these sample resources are placeholders.  You should use your own names and locations, and you should be doing something unique for the workshop.  For example, I'm creating `mi-deployContactWebtoAzureFromGitHubActions` in the `deploymentcommon` resource group in my own subscription and deployment region.  You should replace these important values with your own values to map to this workshop.
 
     - Name: `mi-deployContactWebtoAzureFromGitHubActions` [or some name that makes sense to you]
     - Resource Group: `your-resource-group`
@@ -61,6 +63,8 @@ The UMI can be created in any resource group. For simplicity, you can use the sa
     ![Create User Managed Identity](images/Part2-common/umi/image0001-createmanagedidentity.png)   
 
 1. Validate that you have the UMI created in the portal.
+
+    Make sure you have the credential created:  
 
     ![Validate User Managed Identity](images/Part2-common/umi/image0002-validateumicreated.png)
 
