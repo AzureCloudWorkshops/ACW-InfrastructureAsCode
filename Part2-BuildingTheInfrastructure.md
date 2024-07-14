@@ -39,15 +39,15 @@ In this first task, you will create a user-managed identity that will be used to
 
 Assuming you would have a subscription per environment in real-world projects, you would duplicate the efforts on the production subscription and the development subscription.  
 
+>**Note:** For more information on how you can be environment specific and use GitHub actions for secure architecture deployments, see the workshop [Azure Cloud Workshops: Github Actions Architecture And Application CI/CD](https://github.com/AzureCloudWorkshops/ACW-GithubActionsArchitectureAndApplicationCICD)  
+
 ### Step 1: Create a user-managed identity in Azure for deployment
 
 To begin, you will need to create a user-managed identity in Azure. This identity will be used to authenticate to Azure from GitHub Actions.
 
-The UMI will be created in any resource group. For simplicity, you can use the same group for this workshop.  In the real world you might put these identities in their own group somewhere to keep track of all of them and easily manage RBAC around the identities. 
+The UMI can be created in any resource group. For simplicity, you can use the same group you are currently working with for this workshop.  In the real world you might put these identities in their own group somewhere to keep track of all of them and easily manage RBAC around the identities. 
 
->**Note:** You need to have any resource group to store your UMI resource. If you don't have one already, create a resource group to store your UMI resource.  
-
->**Note:** you could do these things in other ways (i.e. App Registration - the old way, or via the cli to create resources) but the easiest, most secure, and preferred way with all the credentials and permissions in one place is to use a user-managed identity created in the portal, wired directly to your GitHub repo.  
+>**Note:** you could approach the deployments in multiple ways (i.e. App Registration - the old way, or via the cli to create resources) but the easiest, most secure, and preferred way with all the credentials and permissions in one place is to use a user-managed identity created in the portal, wired directly to your GitHub repo.  
 
 1. Log in to the azure portal, navigate to Managed Identities, and create a new user-managed identity.  Give it a name that makes sense for the app service you are deploying to, and make sure it is in the same subscription as the app service you are deploying to.
 
@@ -56,11 +56,11 @@ The UMI will be created in any resource group. For simplicity, you can use the s
     - Subscription: `your-subscription`
     - Region: `your-region`
 
-    ![Create User Managed Identity](images/0001_CreateArchitectureDeployment/Step1Task1/image0001-createmanagedidentity.png)   
+    ![Create User Managed Identity](images/Part2-common/umi/image0001-createmanagedidentity.png)   
 
 1. Validate that you have the UMI created in the portal.
 
-    ![Validate User Managed Identity](images/0001_CreateArchitectureDeployment/Step1Task1/image0002-validateumicreated.png)
+    ![Validate User Managed Identity](images/Part2-common/umi/image0002-validateumicreated.png)
 
     >**Important:** Make sure to make note of the `Client ID` and `Subscription ID` of the identity, as this will be used later. This `Client ID` and `Subscription ID` in combination with the `Tenant ID` will be used to validate the federated credentials, log in to azure, and authorize from GitHub Actions secrets.
 
