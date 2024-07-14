@@ -133,7 +133,9 @@ To allow GitHub Actions to execute against this service principal, you will need
     
     Using environments is very important because it can ensure that only dev resources are deployed in the dev subscription, and allows you to configure environments in GitHub Actions to deploy to different subscriptions based on the environment. 
 
-    !["Dev environment federated credentials"](images/Part2-common/umi/image0007-environmentcredential.png)    
+    !["Dev environment federated credentials"](images/Part2-common/umi/image0007-environmentcredential.png)  
+
+    >**Note:** Refer to our GitHub actions for CI/CD workshop for more information on working with [GitHub Actions for CI/CD](https://github.com/AzureCloudWorkshops/ACW-GithubActionsArchitectureAndApplicationCICD)  
 
     In the end, I have two credentials. You need at least one (branch and/or environment) to deploy from GitHub Actions.  If you only use the environment, then your deployment action will need to name the environment in the workflow file.  If you use the branch, then you don't need to do anything special on the deployment action, it just needs to run from that branch.
 
