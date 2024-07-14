@@ -49,9 +49,11 @@ The UMI can be created in any resource group. For simplicity, you can use the sa
 
 >**Note:** you could approach the deployments in multiple ways (i.e. App Registration - the old way, or via the cli to create resources) but the easiest, most secure, and preferred way with all the credentials and permissions in one place is to use a user-managed identity created in the portal, wired directly to your GitHub repo.  
 
-1. Log in to the azure portal, navigate to Managed Identities, and create a new user-managed identity.  Give it a name that makes sense for the app service you are deploying to, and make sure it is in the same subscription as the app service you are deploying to.
+1. Log in to the azure portal, navigate to Managed Identities, and create a new user-managed identity.  Give it a name that makes sense for the app service you are deploying to, and make sure it is in the same subscription as the app service you are deploying to. 
 
-    - Name: `mi-deployToAzureFromGitHubActions` (or whatever makes sense for your app service)
+>**NOTE:** The names and locations of these sample resources are placeholders.  You should use your own names and locations, and you should be doing something unique for the workshop.  For example, I'm creating `mi-deployContactWebtoAzureFromGitHubActions` in the `deploymentcommon` resource group in my own subscription and deployment region.  You should replace these important values with your own values to map to this workshop.
+
+    - Name: `mi-deployContactWebtoAzureFromGitHubActions` [or some name that makes sense to you]
     - Resource Group: `your-resource-group`
     - Subscription: `your-subscription`
     - Region: `your-region`
@@ -63,6 +65,10 @@ The UMI can be created in any resource group. For simplicity, you can use the sa
     ![Validate User Managed Identity](images/Part2-common/umi/image0002-validateumicreated.png)
 
     >**Important:** Make sure to make note of the `Client ID` and `Subscription ID` of the identity, as this will be used later. This `Client ID` and `Subscription ID` in combination with the `Tenant ID` will be used to validate the federated credentials, log in to azure, and authorize from GitHub Actions secrets.
+
+    If you need to find your tenant ID, you can get it from the `subscriptions` blade by navigating to `subscriptions` and selecting subscription, then getting the `Parent Management Group` value:
+
+    ![Get Tenant ID](images/Part2-common/umi/image0002.5-gettenantid.png)
 
 ### Step 2: Create Federated Credentials
 
@@ -82,31 +88,34 @@ To allow GitHub Actions to execute against this service principal, you will need
 
     For the Connect your GitHub account section, you will need to authorize your Azure Subscription and GitHub to talk to one another.
 
-    Once you have done this, enter the organization name where your code for the contact web application is located.
+    First, you will need your organization name and your repository name.  Please note that in the images below the values for the repository name and organization are placeholders.  You will need to replace them with your own values based on your account information and whatever you named the repo where you will be coding your IaC files. The repo I used in these images for creating the credential is `` and my organization is `blgorman`.
 
-    >**Note:** The organization is typically your github user account name (in the URL of your github account, the part right after `https://www.github.com/`).  For example, my repo is here: `https://github.com/blgorman/InfrastructureAsCodeACWWork`, so my organization name is `blgorman` and the repo name is `InfrastructureAsCodeACWWork`. 
+    >**Note:** The organization is typically your github user account name (in the URL of your github account, the part right after `https://www.github.com/`). The repo name follows that user name. 
 
-    Then enter the repository name where your code for the contact web application is located.  My repository is `InfrastructureAsCodeACWWork`.
+    Then enter the repository name where your code for the contact web application is located.  My repository is `InfrastructureAsCodeACWWork`.  You need to put the **EXACT** name of your repository here or it will not work.
 
     Select entity type: `Branch`  
 
-    Then enter the branch name for deployment which is likely `main` or possibly `master`. My branch is `main`
+    Enter the branch name: `main`
 
-    Then name the credential:
+    Make sure your subject identifier has the exact path:
 
-    ```bash
+    ```text
+    repo:yourorg/yourrepo/heads/main
+    ```  
+
+    >**Important**: `yourorg` should be your github username and `yourrepo` should be the name of the repository where you are storing your IaC files.  The `main` branch is the default branch for the repository.  This path should be generated for you.
+
+    !["Federated Credential Scenario"](images/Part2-common/umi/image0004-federatedcredentialscenario.png)
+
+    Name the credential something that makes sense to you
+
+    ```text
     iac-workshop-contactweb-dev-github-main
     ```  
 
-    With description:
-    
-    ```bash
-    GitHub Actions deploying Azure Resources
-    ```
+    !["Name and add credential"](images/Part2-common/umi/image0005.5-nameandaddcredential.png)  
 
-    Then select `Add`.
-    
-    !["Adding a credential"](images/Part2-common/image0005-branchdeploycredentials.png)  
             
 1. Once the add is completed, you will see the credential in the list of federated credentials.
 
@@ -114,20 +123,23 @@ To allow GitHub Actions to execute against this service principal, you will need
 
 1. Additional credentials
 
-    I like to add an environment credential that allows me to run the workflow from any branch.  Currently the only branch that can deploy is the `main` branch of my repo.  If you want to allow other branches to deploy, you will want a second federated credential that uses the `Environments` option.  This is also nice because it can ensure that only dev resources are deployed in the dev subscription.
+    You don't need to do this today, but if you want an additional trigger, you could add a second federated credential for a different branch.  
 
-    !["Dev environment federated credentials"](images/Part2-common/image0007-devEnvironmentFederatedCredential.png)  
+    I like to use an environment credential that allows me to run the workflow from any branch.  Currently the only branch that can deploy is the `main` branch of my repo based on the credential above.  If you want to allow other branches to deploy, or if you want to limit the environment where code can be deployed by a credential (very useful), you will want a second federated credential that uses the `Environments` option (in fact, you may choose to only use environment in the real world).  
+    
+    Using environments is very important because it can ensure that only dev resources are deployed in the dev subscription, and allows you to configure environments in GitHub Actions to deploy to different subscriptions based on the environment. 
 
-    In the end, I have two. You need at least one (branch and/or environment) to deploy from GitHub Actions.
+    !["Dev environment federated credentials"](images/Part2-common/umi/image0007-environmentcredential.png)    
 
-    !["Both federated credentials can coexist"](images/Part2-common/image0008-bothcredentialscreated.png)  
+    In the end, I have two credentials. You need at least one (branch and/or environment) to deploy from GitHub Actions.  If you only use the environment, then your deployment action will need to name the environment in the workflow file.  If you use the branch, then you don't need to do anything special on the deployment action, it just needs to run from that branch.
 
+    !["Both federated credentials can coexist"](images/Part2-common/umi/image0008-bothcredentials.png)  
 
-## Task 2 - Give the principal permissions to deploy
+## Task 2 - Give the managed identity permissions to deploy
 
-In order for the principal to deploy to Azure, it needs to have the correct permissions.  This is done via the `Access Control (IAM)` blade in the portal.
+In order for the identity to deploy to Azure, it needs to have the correct permissions.  This is done via the `Access Control (IAM)` blade in the portal.
 
-1. Navigate to the `Access Control (IAM)` blade for the subscription.
+1. Navigate to the subscription, then select the `Access Control (IAM)` blade.
 
     If you are going to deploy a resource group in the subscription level, then you will need to be a contributor on the subscription.  This is done via the `Access Control (IAM)` blade in the portal for the subscription.
 
@@ -149,22 +161,19 @@ In order for the principal to deploy to Azure, it needs to have the correct perm
 
     Select `Members` -> leave the default of `User, group, or service principal` and hit the `+ Select members` button.
 
-    Find the service principal you created in the previous task and select it.  Then hit `Select`.
+    Find the managed identity you created in the previous task and select it.  Then hit `Select`.
 
-    !["Members"](images/Part2-common/image0012-selectingtheprincipal.png)  
+    !["Members"](images/Part2-common/image0012-selectingthemanagedidentity.png)  
 
 1. Hit `Review + assign`
 
     Validate that you have the correct principal and role and then hit `Review + assign`.
 
-    !["Review and assign"](images/Part2-common/image0013-validateroleassignment.png)  
-
-    Hit `Assign` to complete the assignment.
+1. Ensure the role is assigned
 
     Validate the role is shown in the `Role assignments` tab.
 
     !["Role Exists"](images/Part2-common/image0014-roleexists.png)  
-
 
 ## Task 3 - Set the GitHub Secrets
 
