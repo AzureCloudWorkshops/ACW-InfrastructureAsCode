@@ -2,7 +2,6 @@
 
 Part 2 of this workshop will teach you how to leverage permissions and GitHub actions to complete a fully automated IaC Pipeline in your azure subscription to host your web solution in an Azure App Service.
 
-
 ## Overall Goals of Part 2
 
 In part 2 of this workshop, we're going to get the entire infrastructure deployed to host a web application in Azure. This will include the following resources:
@@ -24,117 +23,127 @@ All of this will be done from GitHub Actions, not from the command line.  You ca
 
 ## Deployment Credentials
 
-In order to deploy to the solution, you'll need to have the correct credentials in place on your subscription.  You will do this by creating a service principal and assigning it the correct permissions. 
+In order to deploy to the solution, you'll need to have the correct credentials in place on your subscription.  You will do this by creating a user-managed identity at Azure and assigning it the correct permissions on the subscription (or group if doing a deployment to a specific resource group instead of a subscription-level deployment). 
 
-You will then need to leverage the secrets from the service principal in GitHub Actions to deploy the infrastructure. (you will not be doing this part from the command line - but you can still deploy from the command line to test things as needed).  The end goal will be a full, working IAC pipeline that deploys the infrastructure.  
+You will then need to leverage the secrets from the managed identity in GitHub Actions to deploy the infrastructure.  The end goal will be a full, working IAC pipeline that deploys the infrastructure.  For the rest of the workshop, deployments should mainly run from actions, however you can still run the CLI commands if you need to test something out or if you can't get the action to deploy with credentials based on limitations in your subscription/azure rights.
 
 It will be incredibly important to manage the order of deployments for this infrastructure, because you need a Key Vault to have secrets, but you can't set the secret until you have the value for the connection string and the app service needs to have a principal that can connect to Key Vault and get the secrets.  All of this to say that when building your pipeline architecture, you have to do a lot of planning and you may need to do things in parts - i.e. deploy one resource, deploy a second resource, then come back to the first and update it with the second resource's information.
 
-## Task 1 - Create a service principal
+That being said, what is presented for deployment in this workshop is only one of a few possible solutions, and differs between the deployment using bicep and the deployment using terraform for practical reasons and to show the variety of ways that you can deploy resources in Azure, even when dependencies are present.
 
-To get started, in order to deploy to Azure you will need to create a service principal/app registration.  This can be accomplished via the command line, however it is incredibly easy to do in the portal.  For that reason, this workshop will show how to do this in the portal in order to limit/minimize the number of problems that could result from doing it incorrectly via the command line.
+## Task 1 - Create a user-managed identity and federated credentials for deployment 
 
-1. Navigate to the Azure Portal and login with your credentials.
+In this first task, you will create a user-managed identity that will be used to deploy the architecture and application.   
 
-    Get logged in to the Azure portal.
+>**Consider:** Before moving on, consider what you might do to be more secure than just using a user-managed identity with contributor access on the subscription.
 
-1. Navigate to the App Registrations blade.
+Assuming you would have a subscription per environment in real-world projects, you would duplicate the efforts on the production subscription and the development subscription.  
 
-    Type `App Registrations` in the search bar and select the `App Registrations` blade.
+>**Note:** For more information on how you can be environment specific and use GitHub actions for secure architecture deployments, see the workshop [Azure Cloud Workshops: Github Actions Architecture And Application CI/CD](https://github.com/AzureCloudWorkshops/ACW-GithubActionsArchitectureAndApplicationCICD)  
 
-    !["App Registrations"](images/Part2-common/image0000-AppRegistrations.png)  
+### Step 1: Create a user-managed identity in Azure for deployment
 
-1. Select `+ New Registration` at the top of the `App Registrations` blade.
+To begin, you will need to create a user-managed identity in Azure. This identity will be used to authenticate to Azure from GitHub Actions.
 
-    !["New Registration"](images/Part2-common/image0001-newregistration.png)  
+The UMI can be created in any resource group. For simplicity, you can use the same group you are currently working with for this workshop.  In the real world you might put these identities in their own group somewhere to keep track of all of them and easily manage RBAC around the identities. 
 
-1. Enter a name such as `iac-workshop-contactweb-dev` and select `Register`.
+>**Note:** you could approach the deployments in multiple ways (i.e. App Registration - the old way, or via the cli to create resources) but the easiest, most secure, and preferred way with all the credentials and permissions in one place is to use a user-managed identity created in the portal, wired directly to your GitHub repo.  
 
-    Enter a name that makes sense for your service principal.  For this you are automating your IAC.  You would likely create one per environment (per subscription).  For this workshop, you can use `iac-workshop-contactweb-dev` as the name so you can remember what it is for.  For this workshop we will proceed as if all of this is being done in a development environment.  To add a production environment, you would repeat this process and create a new service principal for production, and you could leverage the same GitHub actions to deploy to production as a second task in just one overall pipeline.
+1. Create a new managed identity
 
-    ```bash
-    iac-workshop-contactweb-dev
-    ```  
+    Log in to the azure portal, navigate to Managed Identities, and create a new user-managed identity.  Give it a name that makes sense for the app service you are deploying to, and make sure it is in the same subscription as the app service you are deploying to. 
 
-    Leave all of the other settings as their defaults - do not modify anything else on this screen.  Hit `Register` at the bottom of the screen.
+    >**NOTE:** The names and locations of these sample resources are placeholders.  You should use your own names and locations, and you should be doing something unique for the workshop.  For example, I'm creating `mi-deployContactWebtoAzureFromGitHubActions` in the `deploymentcommon` resource group in my own subscription and deployment region.  You should replace these important values with your own values to map to this workshop.
 
-    !["Register"](images/Part2-common/image0002-servicePrincipalAppRegistration.png)  
+    - Name: `mi-deployContactWebtoAzureFromGitHubActions` [or some name that makes sense to you]
+    - Resource Group: `your-resource-group`
+    - Subscription: `your-subscription`
+    - Region: `your-region`
 
-1. Gather the important id's for later use
+    ![Create User Managed Identity](images/Part2-common/umi/image0001-createmanagedidentity.png)   
 
-    For GitHub Actions, you will need the following information from the overview screen:
+1. Validate that you have the UMI created in the portal.
 
-    - Application (client) ID
-    - Directory (tenant) ID
+    Make sure you have the credential created:  
 
-    Make sure to capture these somewhere so you can use them later.  Of course you can always come back here to get these values later if necessary.  
+    ![Validate User Managed Identity](images/Part2-common/umi/image0002-validateumicreated.png)
 
-    !["Overview for App Registration"](images/Part2-common/image0003-applicationAndTenantIds.png)  
+    >**Important:** Make sure to make note of the `Client ID` and `Subscription ID` of the identity, as this will be used later. This `Client ID` and `Subscription ID` in combination with the `Tenant ID` will be used to validate the federated credentials, log in to azure, and authorize from GitHub Actions secrets.
 
-1. Create Federated Credentials
+    If you need to find your tenant ID, you can get it from the `subscriptions` blade by navigating to `subscriptions` and selecting subscription, then getting the `Parent Management Group` value:
 
-    To allow GitHub Actions to execute against this service principal, you will need to create federated credentials.
+    ![Get Tenant ID](images/Part2-common/umi/image0002.5-gettenantid.png)
 
-    Click on the `Certificates & secrets` blade on the left side of the screen.
+### Step 2: Create Federated Credentials
 
-    Then select `Federated credentials` at the middle of the screen.
+To allow GitHub Actions to execute against this service principal, you will need to create federated credentials.  
+
+1. Click on the `Federated Credentials` blade on the left side of the screen of the User-Managed identity.
 
     Then select `Add credential`.
 
-    !["Federated Credentials"](images/Part2-common/image0004-creatingACredential.png)  
+    !["Federated Credentials"](images/Part2-common/umi/image0003-AddFederatedCredential_start.png)  
 
 1. Create the scenario for GitHub Actions
 
-    For the `Federeated credential scenario` select `GitHub Actions deploying Azure Resources`.
+    For the `Federated credential scenario` select `GitHub Actions deploying Azure Resources`.
 
-    For the Connect your GitHub account section, you will need to authorize your Azure Subscription and GitHub to talk to one another.
+    For the `Connect your GitHub account` section, you will need to authorize your Azure Subscription and GitHub to talk to one another.
 
-    Once you have done this, enter the organization name where your code for the contact web application is located.
+    First, you will need your organization name and your repository name.  Please note that in the images below the values for the repository name and organization are placeholders.  You will need to replace them with your own values based on your account information and whatever you named the repo where you will be coding your IaC files. The repo I used in these images for creating the credential is `InfrastructureAsCodeACWWork` and my organization is `blgorman`.
 
-    >**Note:** The organization is typically your github user account name (in the URL of your github account, the part right after `https://www.github.com/`).  For example, my repo is here: `https://github.com/blgorman/InfrastructureAsCodeACWWork`, so my organization name is `blgorman`. 
+    >**Note:** The organization is typically your github user account name (in the URL of your github account, the part right after `https://www.github.com/`). The repo name follows that user name. 
 
-    Then enter the repository name where your code for the contact web application is located.  My repository is `InfrastructureAsCodeACWWork`.
+    Then enter the repository name where your code for the contact web application is located.  You need to put the **EXACT** name of your repository here or it will not work.
 
     Select entity type: `Branch`  
 
-    Then enter the branch name for deployment which is likely `main` or possibly `master`. My branch is `main`
+    Enter the branch name: `main`
 
-    Then name the credential:
+    Make sure your subject identifier has the exact path:
 
-    ```bash
+    ```text
+    repo:yourorg/yourrepo/heads/main
+    ```  
+
+    >**Important**: `yourorg` should be your github username and `yourrepo` should be the name of the repository where you are storing your IaC files.  The `main` branch is the default branch for the repository.  This path should be generated for you.
+
+    !["Federated Credential Scenario"](images/Part2-common/umi/image0004-githubactionsdeployingazureresources.png)  
+
+    Name the credential something that makes sense to you
+
+    ```text
     iac-workshop-contactweb-dev-github-main
     ```  
 
-    With description:
-    
-    ```bash
-    GitHub Actions deploying Azure Resources
-    ```
+    !["Name and add credential"](images/Part2-common/umi/image0005.5-nameandaddcredential.png)  
 
-    Then select `Add`.
-    
-    !["Adding a credential"](images/Part2-common/image0005-branchdeploycredentials.png)  
             
 1. Once the add is completed, you will see the credential in the list of federated credentials.
 
-    !["Credential added"](images/Part2-common/image0006-federatedCredentialsMainBranch.png)
+    !["Credential added"](images/Part2-common/umi/image0006-credentialislisted.png)
 
 1. Additional credentials
 
-    I like to add an environment credential that allows me to run the workflow from any branch.  Currently the only branch that can deploy is the `main` branch of my repo.  If you want to allow other branches to deploy, you will want a second federated credential that uses the `Environments` option.  This is also nice because it can ensure that only dev resources are deployed in the dev subscription.
+    You don't need to do this today, but if you want an additional trigger, you could add a second federated credential for a different branch.  
 
-    !["Dev environment federated credentials"](images/Part2-common/image0007-devEnvironmentFederatedCredential.png)  
+    I like to use an environment credential that allows me to run the workflow from any branch.  Currently the only branch that can deploy is the `main` branch of my repo based on the credential above.  If you want to allow other branches to deploy, or if you want to limit the environment where code can be deployed by a credential (very useful), you will want a second federated credential that uses the `Environments` option (in fact, you may choose to only use environment in the real world).  
+    
+    Using environments is very important because it can ensure that only dev resources are deployed in the dev subscription, and allows you to configure environments in GitHub Actions to deploy to different subscriptions based on the environment. 
 
-    In the end, I have two. You need at least one (branch and/or environment) to deploy from GitHub Actions.
+    !["Dev environment federated credentials"](images/Part2-common/umi/image0007-environmentcredential.png)  
 
-    !["Both federated credentials can coexist"](images/Part2-common/image0008-bothcredentialscreated.png)  
+    >**Note:** Refer to our GitHub actions for CI/CD workshop for more information on working with [GitHub Actions for CI/CD](https://github.com/AzureCloudWorkshops/ACW-GithubActionsArchitectureAndApplicationCICD)  
 
+    In the end, I have two credentials. You need at least one (branch and/or environment) to deploy from GitHub Actions.  If you only use the environment, then your deployment action will need to name the environment in the workflow file.  If you use the branch, then you don't need to do anything special on the deployment action, it just needs to run from that branch.
 
-## Task 2 - Give the principal permissions to deploy
+    !["Both federated credentials can coexist"](images/Part2-common/umi/image0008-bothcredentials.png)  
 
-In order for the principal to deploy to Azure, it needs to have the correct permissions.  This is done via the `Access Control (IAM)` blade in the portal.
+## Task 2 - Give the managed identity permissions to deploy
 
-1. Navigate to the `Access Control (IAM)` blade for the subscription.
+In order for the identity to deploy to Azure, it needs to have the correct permissions.  This is done via the `Access Control (IAM)` blade in the portal.
+
+1. Navigate to the subscription, then select the `Access Control (IAM)` blade.
 
     If you are going to deploy a resource group in the subscription level, then you will need to be a contributor on the subscription.  This is done via the `Access Control (IAM)` blade in the portal for the subscription.
 
@@ -154,26 +163,23 @@ In order for the principal to deploy to Azure, it needs to have the correct perm
 
 1. Add `Members`
 
-    Select `Members` -> leave the default of `User, group, or service principal` and hit the `+ Select members` button.
+    Select `Managed Identity` and hit the `+ Select members` button right under the radio button for access selection.
 
-    Find the service principal you created in the previous task and select it.  Then hit `Select`.
+    Find the managed identity you created in the previous task and select it.  Then hit `Select`.
 
-    !["Members"](images/Part2-common/image0012-selectingtheprincipal.png)  
+    !["Members"](images/Part2-common/image0012-selectingthemanagedidentity.png)  
 
 1. Hit `Review + assign`
 
     Validate that you have the correct principal and role and then hit `Review + assign`.
 
-    !["Review and assign"](images/Part2-common/image0013-validateroleassignment.png)  
-
-    Hit `Assign` to complete the assignment.
+1. Ensure the role is assigned
 
     Validate the role is shown in the `Role assignments` tab.
 
     !["Role Exists"](images/Part2-common/image0014-roleexists.png)  
 
-
-## Task 2 - Set the GitHub Secrets
+## Task 3 - Set the GitHub Secrets
 
 With the Azure credentials in place, it's time to get the GitHub Actions set up to log in and run deployments against your Azure subscription.
 
@@ -208,13 +214,11 @@ Once this is completed, you will be able to check in code changes and rely on th
     - Secret name: `AZURE_TENANT_ID`
     - Value: `<your tenant id>`
 
-    >**Note:** Your subscription ID can be easily obtained from almost any resource or by running the cli command `az account show` (field: `id`) If you run `az account show` you will also get your Tenant Id (field: `tenantId` not `homeTenantId` which could be different).  Your tenant and client id's can be obtained from the overview screen of your app registration in the portal and you likely copied them earlier in this workshop.  You can also get your subscription ID from the portal -> Subscriptions -> overview blade.
+    >**Note:** Your subscription ID can be easily obtained from almost any resource or by running the cli command `az account show` (field: `id`) If you run `az account show` you will also get your Tenant Id (field: `tenantId` not `homeTenantId` which could be different).  Your tenant and client id's can be obtained from the overview screen of your user managed identity (shown earlier) in the portal - you likely already copied them earlier in this workshop. 
 
-    !["Client ID"](images/Part2-common/image0017-clientid1.png)
+    !["adding Client ID secret"](images/Part2-common/image0017-clientid1.png)
 
-    !["Client ID and Tenant ID"](images/Part2-common/image0018_clientId2tenantid.png)  
-
-    !["Subscription ID"](images/Part2-common/image0019-SubscriptionId.png)  
+    Make sure to add all three secrets.
 
 1. Validate that you have the three secrets ready to go.
 
@@ -226,29 +230,31 @@ Once this is completed, you will be able to check in code changes and rely on th
 
 ## Completion check
 
-Do not move forward until you have a service principal with the correct permissions to deploy to your subscription and you have the three secrets in place in your GitHub repository as you will not be able to complete the rest of this workshop/walkthrough without these in place.
+Do not move forward until you have a managed identity with the correct permissions to deploy to your subscription and you have the three secrets in place in your GitHub repository as you will not be able to complete the rest of this workshop/walkthrough without these in place.
 
-## Task 3 - Create the automation action to execute the deployment
+Additionally, for your managed identity, you should have set at least one federated credential (branch) so that you can trigger the deployment from the `main` branch of your repository.  If you want to deploy from other branches, you will want to set up an environment credential as well.
+
+## Task 4 - Create the automation action to execute the deployment
 
 With everything in place to deploy, it's time to get the automation in place to execute the deployment.  This will be done via GitHub Actions.  Since the choice exists to do this with either bicep or terraform, this walkthrough will show how to do this with both.  The only part that will be different is the deployment action and the actual files used for deployment.  The rest of the workflow will generally be the same.
 
-### Create starter files (Terraform only)
+### Step 1: Terrform only (bicep skip this step): Create starter files 
 
 In order to test the automation for Terraform you first need to create a couple files to get you started:
 
 - Create a folder called `Part2` inside the terraform folder you created in part 1 of this workshop.
-- Create a `deployContactWebArchitecture.tf` and providers.tf file in the `Part2` folder as well.
+- Create a `deployContactWebArchitecture.tf` and `providers.tf` file in the `Part2` folder as well.
 - Push the files to your repo. 
 
-### Create GitHub Action to deploy resources  
+### Step 2: (Everyone) Create GitHub Action to deploy resources  
 
 1. Navigate to the `Actions` tab of your repository and select `set up a workflow yourself`.
 
     !["Actions -> Set up a workflow yourself"](images/Part2-common/image0021-actionworkflow.png)  
 
-1. Use the appropriate following yaml file for your deployment type.
+1. Use the appropriate following yaml file for your deployment type (Bicep: 2a, Terraform 2b).
 
-#### Bicep:  
+#### Step 2a - Bicep:  
 
 ```yaml
 name: "Bicep Deploy Resources"
@@ -284,14 +290,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Log in to Azure
-        uses: azure/login@v1.4.6
+        uses: azure/login@v2.1.1
         with:
           client-id: ${{ env.AZURE_CLIENT_ID_CONTACTWEB_DEV }}
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy Resources
-        uses: Azure/arm-deploy@v1.0.9
+        uses: Azure/arm-deploy@v2.0.0
         with:
           scope: subscription
           subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}
@@ -302,7 +308,7 @@ jobs:
           failOnStdErr: true
 ```
 
-#### Terraform:  
+#### Step 2b - Terraform:  
 
 ```yaml
 name: "Terraform Deploy Resources"
@@ -414,12 +420,17 @@ jobs:
 
 >**Note:** If doing bicep, you don't currently have a `deployContactWebArchitecture.bicep` file so you'll get a failure.  For Terraform you should see a plan with no changes being generated.
 
-#### Additional steps for Bicep  
+#### Step 3: Additional steps
+
+Go to the appropriate step (3a for bicep, 3b for terraform) based on the deployment type you are using.
+
+##### Step 3a: Bicep only  
+
 Even though the run failed, validate login was successful
 
 Before moving forward, you should have a successful login in your workflow.  If that did not work, then you need to make sure the three secrets are correct and that you ran from the main branch or with the `dev` environment credential (both should have been the case - you were likely on your main branch and you put the `dev` environment variable in if you copied the code above).
 
-    !["No file but login was successful"](images/Part2-common/image0022-loginsuccessjustneedfilebicep.png)  
+!["No file but login was successful"](images/Part2-common/image0022-loginsuccessjustneedfilebicep.png)  
 
 1. Add appropriate infrastructure file(s) to your repo.
 
@@ -459,7 +470,7 @@ Before moving forward, you should have a successful login in your workflow.  If 
 
     >**Note:** The bicep files above can be found in the `iac/bicep/Part2/starter` folder of this repo.
 
-#### Additional steps for Terraform:  
+##### Step 3b: Terraform only  
 
 1. Complete the work for Terraform to run successfully.
 
@@ -525,6 +536,8 @@ variable "location" {
 }
 ```
 
+### Step 4: Commit and push the changes
+
 1. Check in your changes and ensure automation deployment completes successfully
 
     You should now see the deployment work as expected, and your action should run to completion and create/ensure the resource group exists as expected.
@@ -547,7 +560,9 @@ variable "location" {
 
 Do not move forward if you do not have a working IaC pipeline that executes a subscription-level deployment using your service principal credentials in your Azure subscription.  You should have a main file for deployment orchestration and it should ensure that the resource group exists in your subscription.  If you do not have this, you will not be able to complete the rest of this workshop/walkthrough.
 
-## One last piece of information
+## Additional Information
+
+### Convert Arm to Bicep  
 
 There is a trick that you can use when trying to deploy resources to Azure that you need to be aware of.  For example, suppose that you want to deploy an app service with a bunch of configuration settings.  If you are unsure how to get started, go to the portal and actually deploy the app service.  Once you have it deployed, on the left-hand side of the app service, click `Export Template`
 
@@ -565,15 +580,31 @@ To convert to bicep
 az bicep decompile --file template.json
 ```
 
+### Use Bicep Tools in VSCode to generate bicep from an existing resource
+
+In the azure portal, find the resource you want to deploy and then find the resource ID for the resource (typically under `properties` except in storage accounts where it is harder to find).
+
+The resource ID is the unique identifier for the resource in Azure.  You can use this to generate a bicep file in Visual Studio Code.  The ID should be in the pattern:
+
+```bash
+/subscriptions/<subscriptionId>/resourceGroups/<resourceGroupName>/providers/<providerName>/<resourceType>/<resourceName>
+```
+
+![Get Resource ID from Azure](images/Part2-common/image0029-getresourceidazure.png)  
+
+Or something very similar.  
+
+Create a file in your folder called `yourresourcename.bicep`.  Replace `yourresourcename` with something useful like `mystorage` or `mywebapp`, etc. In VSCode, you can then hit `F1` and bring up the bicep tools by typing Bicep (you must be focused on the new, empty bicep file).  Select `Bicep: Insert Resource` and then paste in the resource ID. Hit `Enter` and this will generate the bicep for you.
+
+![Bicep Insert Resource](images/Part2-common/image0030-bicepinsertresource.png)  
+
+
+Original Blog:   
+- [VS Code Resource to Bicep](https://msftplayground.com/2021/12/export-existing-azure-resources-to-bicep/)
+
 ### NubesGen.com
 
 Another great tool that can help you get started is [NubesGen.com](https://nubesgen.com/) which is a resource that lets you quickly generate terraform files for an Azure Deployment.
-
-### Get Resource to Bicep
-
-There is another way to get the resource to Bicep in VSCode.  You can select a resource by Id and generate the bicep using Visual Studio Code.
-
-- [VS Code Resource to Bicep](https://msftplayground.com/2021/12/export-existing-azure-resources-to-bicep/)
 
 ## Breakouts
 

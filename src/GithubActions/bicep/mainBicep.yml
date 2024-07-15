@@ -31,14 +31,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Log in to Azure
-        uses: azure/login@v1.4.6
+        uses: azure/login@v2.1.1
         with:
           client-id: ${{ env.AZURE_CLIENT_ID_CONTACTWEB_DEV }}
           tenant-id: ${{ env.AZURE_TENANT_ID }}
           subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy Resources
-        uses: Azure/arm-deploy@v1.0.9
+        uses: Azure/arm-deploy@v2.0.0
         with:
           scope: subscription
           subscriptionId: ${{ env.AZURE_SUBSCRIPTION_ID }}

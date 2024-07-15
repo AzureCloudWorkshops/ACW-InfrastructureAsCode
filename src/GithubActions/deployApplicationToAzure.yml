@@ -11,13 +11,19 @@ env:
   # set this to the dotnet version to use
   DOTNET_VERSION: '6.0.x' 
   # Put your app name here
-  AZURE_WEB_APP_NAME: 'ContactWeb-20291231acw' 
+  AZURE_WEB_APP_NAME: 'your-app-name-here' 
   # staging by default but you could change to Production if you are not creating a slot 
   AZURE_WEB_APP_SLOT: 'Production' 
-  #Make sure you create a secret with the publish profile named exactly as below
-  AZURE_PUBLISH_PROFILE_SECRET: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B53B45EF7553410AA5A68B4FF0946B2A }}
-  #Working Directory
-  WORKING_DIRECTORY: 'src/ContactWebEFCore6' 
+  # leverage secrets for the umi credential
+  AZURE_TENANT_ID:  ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_CLIENT_ID_CONTACTWEB_DEV: '${{ secrets.AZURE_CLIENT_ID_CONTACTWEB_DEV }}'
+  #Working Directory [must map to the location of your .NET Project]
+  WORKING_DIRECTORY: 'src/ContactWebEFCore6'  
+
+permissions:
+      id-token: write
+      contents: read
 
 jobs:  
   build-and-deploy:
@@ -27,7 +33,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set up .NET Core
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '${{ env.DOTNET_VERSION }}'
           include-prerelease: true
@@ -40,11 +46,17 @@ jobs:
         run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/${{ env.APP_PACKAGE_PATH }}
         working-directory: '${{ env.WORKING_DIRECTORY }}'
 
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
-          app-name: '${{ env.AZURE_WEB_APP_NAME }}'
-          slot-name: '${{ env.AZURE_WEB_APP_SLOT }}'
-          package: '${{env.DOTNET_ROOT}}/${{ env.APP_PACKAGE_PATH }}'
-          publish-profile: ${{ env.AZURE_PUBLISH_PROFILE_SECRET }}
+          app-name: ${{ vars.APP_NAME }}
+          slot-name: ${{ vars.SLOT_NAME }}
+          package: ${{ env.DOTNET_ROOT }}/${{ env.APP_PACKAGE_PATH }}
