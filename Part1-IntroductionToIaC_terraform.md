@@ -822,7 +822,7 @@ If time permits, you can try creating a different resource group and use what yo
 
 So far, we have been working completely out of our main module. In application deployments like the one you will do in part 2, you will want to be able to have your resources distributed in modules. 
 
-IN this task, you'll learn about modules using a similar deployment to the current deployment.
+In this task, you'll learn about modules using a similar deployment to the current deployment.
 
 ### Step 1 - Create a resource group
 
@@ -870,10 +870,15 @@ Now it's time to see how much you can remember from above!
 
     >**Hint:** Don't forget to initialize Terraform in the new directory!
 
-  !["Two Groups"](/images/Part1-terraform/image0018-twogroups.png)    
+    ```text
+    terraform init
+    ```  
 
-    >**Reminder:** If you get lost, leverage the solution files
+    !["Two Groups"](images/Part1-terraform/image0018-twogroups.png)    
 
+    >**Reminder**: If at any point you get lost, take a look at the files in the solutions folder to see if you can get `unstuck`.  
+
+    
 ### Step 2 - Create a module for the storage account
 
 Now that you have a new resource group, your next task is to create a module for the storage account. 
