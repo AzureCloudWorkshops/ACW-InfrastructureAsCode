@@ -820,55 +820,99 @@ If time permits, you can try creating a different resource group and use what yo
 
 ## Task 7 - Use modules and outputs
 
-So far, we have been working out of our main module. In application deployments like the one we will do in part 2, we want to be able to have our resources distributed in modules. Lets look at the concept of modules using a similar deployment to the one we have so far.
+So far, we have been working completely out of our main module. In application deployments like the one you will do in part 2, you will want to be able to have your resources distributed in modules. 
+
+IN this task, you'll learn about modules using a similar deployment to the current deployment.
 
 ### Step 1 - Create a resource group
 
-In our previous deployment we were using information from an existing resource group, however, in a real world scenario we might have to create the entire infrastructure including the resource group. In this step we will create a new template that deploys a new resource group, lets see how much you remember!
+In your previous deployment you were using information from an existing resource group, however, in a real world scenario you might have to create the entire infrastructure including the resource group. 
 
-1. Create a new folder under the `terraform` folder and add the following files:
-  - providers.tf
-  - variables.tf
-  - main.tf
-  - terraform.tfvars
+In this step, you will create a new template that deploys a new resource group.
 
-2. Add the `azurerm` and `random` providers to the providers.tf file.
+Now it's time to see how much you can remember from above!
 
-3. Add the following variables:
-  - resourceGroupName: string type, not nullable.
-  - location: string type, not nullable, validation to only allow `East US` as a value (optional).
+1. Create a new folder for this second deployment
 
-4. Assign values to the variables in the terraform.tfvars file.
+    Create a new folder under the `terraform` folder called `Part1_Modules` and add the following files:
+    - providers.tf
+    - variables.tf
+    - main.tf
+    - terraform.tfvars
 
-5. Add a resource group block to the main.tf file, the resource type needed is `azurerm_resource_group`.
+1. Leverage what you know to create a valid `providers.tf` file
 
-6. Deploy the resource group, don't forget to initialize Terraform!
+    Add the following providers to the `providers.tf` file:
+    - `azurerm`
+    - `random` 
+  
+1. Create variables for `resourceGroupName` and `location`
+
+    Add the following variables to `variables.tf`:  
+
+    - resourceGroupName: string type, not nullable.
+    - location: string type, not nullable, validation to only allow `East US` as a value (optional).
+
+1. Leverage the `terraform.tfvars` file to create values for the variables
+
+    Assign values to the variables in the `terraform.tfvars` file.
+
+    - resourceGroupName: `iac-training-rg-modules`
+    - location: `eastus` 
+
+1. Use the `azurerm_resource_group` to define the group in `main.tf`
+
+    Add a resource group block to the main.tf file, the resource type needed is `azurerm_resource_group`.  Leverage the variables for name and location created above.
+
+1. Deploy the resource group
+
+    Run the commands to get your deployment into the cloud.  
+
+    >**Hint:** Don't forget to initialize Terraform in the new directory!
+
+  !["Two Groups"](/images/Part1-terraform/image0018-twogroups.png)    
+
+    >**Reminder:** If you get lost, leverage the solution files
 
 ### Step 2 - Create a module for the storage account
 
-Now that we have our resource group, lets create a module for the storage account. In Terraform, you can create your own modules locally or you can get modules from the [Terraform registry](https://registry.terraform.io/), you can even publish your own modules for other people to use. For this exercise, we will focus on local modules:
+Now that you have a new resource group, your next task is to create a module for the storage account. 
+
+In Terraform, you can create your own modules locally or you can get modules from the [Terraform registry](https://registry.terraform.io/), you can even publish your own modules for other people to use. 
+
+For this exercise, you will focus on local modules.
 
 1. Add a modules folder in your working directory and add a storageAccount inside of it.
 
-2. Create a main.tf and variables.tf files in the storageAccount folder.
+    In the current folder where you started your new resource group, add the subdirectory `storageAccount`
 
-3. Copy any of the storage account resource blocks from the root module created in the previous exercise and replace the values assigned to the `name`, `resource_group_name` and `location` with variables.
+1. Create `main.tf` and `variables.tf` files in the `storageAccount` folder.
 
-4. Add the variables specified in the previous step to the variables.tf file.
+1. Create a new storage account definiation in the `main.tf` file in the `storageAccount` folder using terraform
 
-5. Add a reference to the storage account module by adding the following block:
+    Copy any of the storage account resource blocks from the root module created in the previous exercise and replace the values assigned to the `name`, `resource_group_name` and `location` with variables.
 
-```text
-module "storageAccount" {
-  source = "./modules/storageAccount"
+1. Add the variables specified in the previous step to the `variables.tf` file.
 
-  storageAccountNameEnv = local.storageAccountNameEnv
-  resourceGroupName     = var.resourceGroupName
-  location              = var.location
-}
-```
+    You will only need the top-level `variables.tf` file, there is no need to nest one in the `storageAccount` folder.
 
-The main parameter you need to supply when using modules is the `source`, for local modules it should be populated with the folder location. You also need to pass values for any variables that the module is expecting. 
+1. Add the new storage account in the `main.tf` at the top-level of the directory.
+
+    Add a reference to the storage account module by adding the following block:
+
+    ```text
+    module "storageAccount" {
+      source = "./modules/storageAccount"
+
+      storageAccountNameEnv = local.storageAccountNameEnv
+      resourceGroupName     = var.resourceGroupName
+      location              = var.location
+    }
+    ```
+
+    he main parameter you need to supply when using modules is the `source`, for local modules it should be populated with the folder location. 
+    
+    You also need to pass values for any variables that the module is expecting from the top-level. 
 
 6. Deploy the resources, you should see the storage account created in the resource group.
 
