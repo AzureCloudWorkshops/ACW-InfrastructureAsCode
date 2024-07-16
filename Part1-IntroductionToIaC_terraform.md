@@ -888,33 +888,95 @@ For this exercise, you will focus on local modules.
 
 1. Create `main.tf` and `variables.tf` files in the `storageAccount` folder.
 
+    Add variables for the storage account name composition with base, uniqueIdentifier, and environment `storageAccountNameFull`:
+
+    ```text
+    storageAccountNameFull
+    ```  
+
+    >**Hint**: The local `variables.tf` file for the nested storage account should only need three variables defined.
+
 1. Create a new storage account definiation in the `main.tf` file in the `storageAccount` folder using terraform
 
-    Copy any of the storage account resource blocks from the root module created in the previous exercise and replace the values assigned to the `name`, `resource_group_name` and `location` with variables.
+    Leverage any of the storage account resource blocks and learning you've done from the root module created in the previous exercise and replace the values assigned to the `name`, `resource_group_name` and `location` with variables.
 
-1. Add the variables specified in the previous step to the `variables.tf` file.
+    >**Hint**": Use the following variable names, and make sure they are defined as variables for use in the terraform:
 
-    You will only need the top-level `variables.tf` file, there is no need to nest one in the `storageAccount` folder.
+    - storageAccountNameFull (composed from base + uniqueIdentifier + environment)
+    - resourceGroupName
+    - location
 
-1. Add the new storage account in the `main.tf` at the top-level of the directory.
+    >**Additional Hint:** The storageAccountNameFull variable will be passed in so it should not have a default value.
 
-    Add a reference to the storage account module by adding the following block:
+1. Where is the `terraform.tfvars` file?
+
+    You will only need the top-level `terraform.tfvars` file, there is no need to nest one in the `storageAccount` folder.  This allows you to share the variables among all modules, defined in only one place with values.
+
+1. Add the variables specified or necessary to create the variables specified in the previous step to the top-level `variables.tf` file.
+
+    Remember, you will be composing the `storageAccountNameFull` variable, so that should *not* be defined in the `variables.tf` file (what variables do you need to define?).
+
+    >**Hint:** There are three variables needed to define the full storage account name that will also be combined with a random string.
+
+    With that in mind, there should be five variables defined in the `variables.tf` file.  What do you think they are?
+
+    Take a minute to think about this.  If you get stuck, you can always refer to the solution files.
+
+1. Define the values for the variables in the `terraform.tfvars` file
+
+    You will need to make sure the defaults are set for all the variables.
+
+    >**Hint**: Since the name of the storage account is confined and we want it to be a combination of `base` + `unique` + `env` + `random`, and we know unique is `11` chars and `env` is either `3` or `4` chars, keep your base storage account to greater than `3` and less than `8` chars or there will be no room for the random string to append any chars to the end.
+
+    Suggestion, use something like this:
+
+    ```
+    storageAccountNameBase: iacstg
+    ```  
+
+    >**Final Hint**: Your terraform.tfvars should define values for the five variables, none of which should be named `storageAccountNameFull`.  Where do you think you need to define that variable?
+
+1. Add the new storage account as a module.
+
+    Add a reference to the storage account module by adding the following block in the top-level `main.tf` file, under the declaration for the resource group:
 
     ```text
     module "storageAccount" {
-      source = "./modules/storageAccount"
+      source = "./storageAccount"
 
-      storageAccountNameEnv = local.storageAccountNameEnv
+      storageAccountNameEnv = local.storageAccountNameFull
       resourceGroupName     = var.resourceGroupName
       location              = var.location
     }
-    ```
+    ```  
 
-    he main parameter you need to supply when using modules is the `source`, for local modules it should be populated with the folder location. 
+    The main parameter you need to supply when using modules is the `source` directory where the module's `main.tf` file is defined (in this case, it should just be nested in `storageAccount`).
     
-    You also need to pass values for any variables that the module is expecting from the top-level. 
+    For local modules the `source` value should be populated with the `./<folderpath>` notation.
 
-6. Deploy the resources, you should see the storage account created in the resource group.
+    >**Hint**: The module will be created when you initialize terraform
+    
+    You also need to pass values for any variables that the module is expecting from the top-level. In this case, you'll need to compose the full storage account name in a local variable for the `main.tf` file.
+
+    >**Hint:** This was done in the previous sections using a `locals` section. Make sure to include the `environent` as part of the name composition!
+
+1. Deploy the solution
+
+    As mentioned previously, using the module requires a quick compilation.  For that reason, what should you do first when getting ready to deploy?
+
+    >**Hint:** The answer is not `plan` or `apply`
+
+    If you run the wrong command here, you'll see an error:
+
+    !["Error is shown when the module has not been initialized"](images/Part1-terraform/image0019-nomodulemustiniterror.png)  
+
+    Run the commands to initialize, plan, and apply the changes.  When this is done, you should have a new storage account that follows the pattern `base` + `uniqueIdentifer` + `environment` + `randomstring`.
+
+1. Validate the solution
+
+    Make sure the new resource has been successfully deployed before moving on.
+
+    !["Initial module deployment is completed"](images/Part1-terraform/image0020-moduledeploycompleted.png)  
 
 ### Step 3 - Create an output for the storage account 
 
