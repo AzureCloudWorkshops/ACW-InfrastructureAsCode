@@ -392,79 +392,137 @@ In this step, you'll see what happens if you try to do a deployment without defa
 
 ### Step 5 - Use a variable definitions file
 
-In this step, we will use a special file called a variable definitions file to specify the values we want to use in the deployment.
+In this step, you will use a special file called a variable definitions file to specify the values you want to use in the deployment.
 
-1. Add a file called terraform.tfvars to your working directory, Terraform automatically scans for this specific file when deploying resources. If you want to use a different file name you will need to use the `-var-file` parameter when executing the `plan` command.
+1. Add a file called terraform.tfvars to your working directory.
 
-2. Type the name of any of the variables declared in the `variables` file, if you are using the Terraform extension for Visual studio code you should see something like this:
+    Create the file:
 
-!["Terraform apply results."](images/Part1-terraform/tfvarsautocomplete.png)
+    ```bash
+    touch terraform.tfvars
+    ```  
 
-Provide a value for all the variables.
+    Terraform automatically scans for this specific file when deploying resources. 
+    
+    >**Note:** If you want to use a different file name you would need to also use the `-var-file` parameter when executing the `plan` command.
 
-3. Execute the `terraform plan` command again, you should not be prompted to provide a value for the resourceGroupName variable and you should see no changes to your configuration.
+1. Move variables to the new file
 
-### Completion Check
+    Type the name of any of the variables declared in the `variables` file, if you are using the Terraform extension for Visual studio code you should see something like this:
 
-You have a file that you can reuse in multiple resource groups with various storage account names (you would need to change the name in the parameter file at this point to ensure it is unique).
+    !["Terraform apply results."](images/Part1-terraform/tfvarsautocomplete.png)
 
-## Task 6 - Use data sources
+    Provide a value for all the variables.
 
-Up until now we have used variables to provide the name and location of the resource group that contains the storage account, however, Terraform has another way to access information defined outside of Terraform or that is part of a different deployment: data sources. In this step, we will modify the files we have to use a data source to access the resource group information instead of providing the values through variables.
+    !["tfvars file completed"](images/Part1-terraform/image0013-tfvarscompleted.png)  
+
+1. Execute the `terraform plan` command again.
+
+    With all of the variables defined and then given a value, you have seen how to separate the variable definitions from the values for powerful template deployment configurations.
+
+    To be clear, you should not be prompted to provide a value for and variables and you should still see no changes to your deployment in the plan since no infrastructure changes are taking place.
+
+#### Completion Check
+
+You now have a file that you can reuse in multiple resource groups with various storage account names (you would need to change the name in the parameter file at this point to ensure it is unique).
+
+## Task 5 - Use data sources
+
+Up until now, you have used variables to provide the name and location of the resource group that contains the storage account. However, Terraform has another way to access information defined outside of Terraform or that is part of a different deployment using `data sources`. 
+
+In this step, you will modify the files you currently have to use a data source to access the resource group information instead of providing the values through variables.
 
 ### Step 1 - Add data source to configuration
 
-Go to the top of the main.tf file and type `da`, if you are using the Terraform extension for VS code you should see the following:
+In this first step, you'll add a data source for the resource group
 
-!["Terraform data block autocomplete."](images/Part1-terraform/dataautocomplete.png)
+1. Add the `data_rg` resource group declaration
 
-Hit the tab key, a data block will be created automatically:
+    Go to the top of the main.tf file and type `da`, if you are using the Terraform extension for VS code you should see the following:
 
-!["Terraform data block options."](images/Part1-terraform/dataautocomplete2.png)
+    !["Terraform data block autocomplete."](images/Part1-terraform/dataautocomplete.png)
 
-Type `azurerm_resource_group`, autocomplete should display the option after you type a few characters:
+    Hit the tab key, a data block will be created automatically:
 
-!["Terraform data block resource group."](images/Part1-terraform/dataautocomplete3.png)
+    !["Terraform data block options."](images/Part1-terraform/dataautocomplete2.png)
 
-The resource group data source requires the name of the resource group, you can use the resourceGroupName variable to populate the parameter. The data block should look like this:
+1. Change the type to `azurerm_resource_group`  
 
-```text
-data "azurerm_resource_group" "data_rg" {
-  name = var.resourceGroupName
-}
-```
+    Type `azurerm_resource_group`, 
+    
+    ```bash
+    azurerm_resource_group
+    ```  
+
+    At this point, autocomplete should display the option after you type a few characters:
+
+    !["Terraform data block resource group."](images/Part1-terraform/dataautocomplete3.png)
+
+1. Set the name of the resource group and location for the resource group
+
+    The resource group data source requires the name of the resource group. You can use the resourceGroupName variable to populate the parameter on this data source. The new data block should look like this:
+
+    ```text
+    data "azurerm_resource_group" "data_rg" {
+      name = var.resourceGroupName
+    } 
+    ```
 
 ### Step 2 - Use data source values in storage account configuration
 
-You can now replace the `resource_group_name` and `location` parameters in the storage account block with the values from the data source using the following syntax:
+In this step, you'll update the declaration in the storage account to leverage the resource group data source.
 
-```text
-data.{RESOURCE_TYPE}.{DATA_SOURCE_NAME}.{DATA_SOURCE_PROPERTY}
-```
-For example, to access the name of a resource group with a data source:
+1. Replace the `resource_group_name` and `location`
 
-```text
-data.azurerm_resource_group.data_rg.name
-```
+    You can now replace the `resource_group_name` and `location` parameters in the storage account block with the values from the data source using the following syntax:
 
-After replacing the name and location of the resource group the storage account block should look something like this:
+    ```text  
+    data.{RESOURCE_TYPE}.{DATA_SOURCE_NAME}.{DATA_SOURCE_PROPERTY}
+    ```  
 
-```text
-resource "azurerm_storage_account" "cm_stg_acct" {
-  name                     = var.storageAccountName
-  resource_group_name      = data.azurerm_resource_group.data_rg.name
-  location                 = data.azurerm_resource_group.data_rg.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-}
-```
+    For example, to access the name of a resource group with a data source:
+
+    ```text  
+    data.azurerm_resource_group.data_rg.name
+    ```  
+
+    and
+
+    ```text
+    data.azurerm_resource_group.data_rg.location
+    ```  
+
+1. Validate the file text before proceeding  
+
+    After replacing the name and location of the resource group the storage account block should look something like this:
+
+    ```text
+    resource "azurerm_storage_account" "cm_stg_acct" {
+      name                     = var.storageAccountName
+      resource_group_name      = data.azurerm_resource_group.data_rg.name
+      location                 = data.azurerm_resource_group.data_rg.location
+      account_tier             = "Standard"
+      account_replication_type = "LRS"
+    }
+    ```  
+
 ### Step 3 - Remove location variable and execute deployment.
 
-Since we are now getting the resource group information from the data source we can now remove the `location` variable from the `variables.tf` and the value assignment from the `terraform.tfvars` file.
+In this step you'll remove the location variable and execute the deployment
 
-You can now execute the `terraform plan` command again, since we are not adding or removing any resources you should see a message saying that no changes were detected.
+1. Remove the `location` variable
 
-## Task 7 - Use local variables and functions
+    Since we are now getting the resource group information from the data source we can now remove the `location` variable from the `variables.tf` and the value assignment from the `terraform.tfvars` file.
+
+    >**Note:** the state of the system already knows the resource group exists.  In this template, the resource group would not be created since no location is provided if there were not currently a state that holds the value of the current existing resource group.
+
+    !["no location variable remains"](images/Part1-terraform/image0014-nolocationdefinedwithrgdatasource.png)  
+
+1. Execute the plan and validate there are no changes
+
+    You can now execute the `terraform plan` command again, since we are not adding or removing any resources you should see a message saying that no changes were detected.
+
+## Task 6 - Use local variables and functions
 
 In this module you will learn to use local variables and functions to create a unique string name for the storage account name. The term `local variable` in terraform refers to any variable used inside a module.
 
@@ -598,7 +656,7 @@ If time permits, add 2 more validations:
 
 You can now deploy the same file to different resource groups multiple times and it will create a unique storage account name per group (and per environment if needed) using local variables, built-in functions and validations. If time permits, you can try creating a different resource group and use what we have built so far to deploy these resources there.
 
-## Task 8 - Use modules and outputs
+## Task 7 - Use modules and outputs
 
 So far, we have been working out of our main module. In application deployments like the one we will do in part 2, we want to be able to have our resources distributed in modules. Lets look at the concept of modules using a similar deployment to the one we have so far.
 
