@@ -89,7 +89,7 @@ Start by creating a main.tf file.  This can be done in a bash terminal, in VSCod
 
     >**Note**: For Bash and PowerShell, make sure you make directories `mkdir` and change directories `cd` to the correct location.  For VSCode, you can right-click on the folder and select New File, name it `main.tf`.
 
-### Completion Check
+### Step 1 Completion Check
 
 Before moving on, ensure that you have a file called `main.tf` in a folder called `iac\terraform\Part1_Main_Module` at the root of your repository (the _workshop repo has starter files and/or you should have made a folder with the `main.tf` file as shown above). 
 
@@ -97,47 +97,75 @@ Before moving on, ensure that you have a file called `main.tf` in a folder calle
 
 For this first activity, you'll be creating a simple storage account.  To do this easily, you'll want a couple of extensions for Terraform in place in VSCode:
 
-- Terraform: 
-!["The VSCode Terraform Extension is shown"](images/Part1-terraform/image0003-terraformExtension.png)  
+1. Get the Hashicorp Terraform Extension
 
-- Azure Tools: 
-!["The VSCode Azure Tools Extension is shown"](images/Part1-terraform/image0004-azuretools.png)
+    Terraform: 
+  !["The VSCode Terraform Extension is shown"](images/Part1-terraform/image0003-terraformExtension.png)  
 
->**Note:** We may not need Azure Tools, but it's a good idea to have it in place for other things you will do in the future.
+1. Get the Azure Tools Extension (optional/recommended)  
 
-First, we need to specify the providers that we will use in the deployment. Add the following code to your main.tf file:
+    Azure Tools: 
+    !["The VSCode Azure Tools Extension is shown"](images/Part1-terraform/image0004-azuretools.png)
 
-```text 
-terraform {
-  required_version = ">=1.6.6"
+    >**Note:** Azure Tools may not be needed, but it's a good idea to have it in place for other things you will do in the future.
 
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~>3.0"      
-    }    
-  }
-}
+1. Specify the providers that we will use in the deployment. 
 
-provider "azurerm" {
-  features {    
-  }
-}
-```
+    Add the following code to your main.tf file:
 
-Next, we need to add a `resource` block to create the storage account:
+    ```text 
+    terraform {
+      required_version = ">=1.6.6"
 
-```text 
-resource "azurerm_storage_account" "cm_stg_acct" {
-  name                     = "cmstgacct"
-  resource_group_name      = "{YOUR RESOURCE GROUP NAME}"
-  location                 = "{YOUR RESOURCE GROUP LOCATION}"
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-}
-```
+      required_providers {
+        azurerm = {
+          source  = "hashicorp/azurerm"
+          version = "~>3.0"      
+        }    
+      }
+    }
 
->**Note:** The resource group name and location must match the values you provided [here](Part1-IntroductionToIaC.md#step-2---create-the-resource-group).
+    provider "azurerm" {
+      features {    
+      }
+    }
+    ```
+
+### Step 2 Completion Check
+
+Before moving on, ensure that you have the `main.tf` file in the correct folder with the settings as above.
+
+### Step 3 - Create the storage account resource
+
+In this step you'll create the storage account resource
+
+1. Add a `resource` block to create the storage account:
+
+    Using the text below, change the name of the storage account to something that is unique, such as `iacstgacctYYYYMMDDxzy`.
+
+    Replace `YYYYMMDD` with today's date.
+
+    Replace `xyz` with your initials.
+
+    >**Note:** Storage account names must be unique to the world, must be between 3-24 characters, and must be only lowercase characters and numbers.
+
+    ```text 
+    resource "azurerm_storage_account" "iac_stg_acct" {
+      name                     = "iacstgacctYYYYMMDDxzy"
+      resource_group_name      = "{YOUR RESOURCE GROUP NAME}"
+      location                 = "{YOUR RESOURCE GROUP LOCATION}"
+      account_tier             = "Standard"
+      account_replication_type = "LRS"
+    }
+    ```
+
+    >**Note:** The resource group name and location must match the values you provided [here](Part1-IntroductionToIaC.md#step-2---create-the-resource-group).
+
+### Step 3 Completion Check
+
+Before moving on, make sure you have the file in place for the storage account creation.  
+
+!["Terraform ready with storage account"](images/Part1-terraform/image0005-storageaccounttf.png)  
 
 ## Task 2 - Run the deployment
 
@@ -151,59 +179,101 @@ The first command only needs to be executed when creating a new configuration or
 
 ### Step 1 - Issue commands to run the deployment
 
-Before you execute any commands, make sure that you are in the `terraform\Part1_Main_Module`folder
+In this step, you'll deploy the storage account using Terraform.
 
-!["Terraform directory."](images/Part1-terraform/terraformdirectory.png)
+1. Ensure you are in the correct directory
 
-Execute the `terraform init` command, after the command completes you should see the following:
+    Before you execute any commands, make sure that you are in the `iac\terraform\Part1_Main_Module`folder
 
-!["Terraform init results."](images/Part1-terraform/terraforminitresult.png)
+    !["Terraform directory."](images/Part1-terraform/image0006-terraformdirectory.png)   
 
-Next, execute the `terraform plan` command:
+1. Terraform Init Command [terraform init]
 
-```text  
-terraform plan -out main.tfplan
-```
+    Execute the `terraform init` command.
 
-You should see the following output (some details are omitted):
+    ```bash
+    terraform init
+    ```  
+    
+    After the command completes you should see the following:
 
-!["Terraform init results."](images/Part1-terraform/terraformplanresult1.png)
+    !["Terraform init results."](images/Part1-terraform/terraforminitresult.png)
 
-!["Terraform init results."](images/Part1-terraform/terraformplanresult2.png)
+1. Terraform Plan Command [terraform plan]
 
-Finally, apply the plan by executing the following command:
+    Execute the `terraform plan` command:
 
-```text  
-terraform apply main.tfplan
-```
+    ```text  
+    terraform plan -out main.tfplan
+    ```
 
-This is the result:
+    >**Note:** the command creates a `main.tfplan` file.
 
-!["Terraform apply results."](images/Part1-terraform/terraformapplyresult.png)
+    You should see the following output (some details are omitted):
+
+    !["Terraform init results."](images/Part1-terraform/terraformplanresult1.png)
+
+    !["Terraform init results."](images/Part1-terraform/terraformplanresult2.png)
+
+1. Terraform Apply Command [terraform apply]  
+
+    Finally, apply the plan by executing the following command:
+
+    ```text  
+    terraform apply main.tfplan
+    ```  
+
+    You should see the following output:
+
+    !["Terraform apply results."](images/Part1-terraform/terraformapplyresult.png)
 
 ### Step 2 - Verify the deployment
 
-### Completion Check
+Before moving on, ensure that you have a storage account in your resource group with a name that matches the value provided in the main.tf file.
 
-You have a storage account in your resource group with a name that matches the value provided in the main.tf file.
+!["Storage Account exists as expected"](images/Part1-terraform/image0007-storageexists.png)  
 
-## Task 4 - Create providers file
+## Task 3 - Create providers file
 
-As mentioned in part 1, when working with Terraform it is recommended to create separate files to keep everything organized. We will start by creating a separate `providers.tf` file. 
+As mentioned in part 1, when working with Terraform it is recommended to create separate files to keep everything organized. In this step, you will create a separate `providers.tf` file. 
 
-### Step 1 - Create `providers.tf`file
+### Step 1 - Create `providers.tf` file
 
-### Step 2 - Move `terraform` and `providers` blocks to providers.tf file
+For the first step, you'll just create a file.
 
-You will now move the `terraform` and `providers` block from the main.tf to the providers.tf file, this should have no impact on your deployment but just to confirm execute the `terraform plan` command, you should see the following messages:
+1. Create a new file in the `iac\terraform\Part1_Main_Module` folder
 
-```text
-No changes. Your infrastructure matches the configuration.
+    ```text
+    providers.tf
+    ```  
 
-Terraform has compared your real infrastructure against your configuration and found no differences, so no changes are needed.
-```
+1. Move `terraform` and `providers` blocks to providers.tf file
 
-## Task 5 - Use input variables
+    Cut the `terraform` and `providers` blocks from the `main.tf` file, and past to the `providers.tf` file, this should have no impact on your deployment.
+
+    !["Providers and Main after changes side by side"](images/Part1-terraform/image0008-providersandmain.png)  
+    
+### Step 2 - Confirm there has been no impact on your deployment
+
+As moving the location of the `terraform` and `providers` section should have no impact, it's important to verify this is the case.
+
+1. Confirm there is no impact on your deployment 
+
+    To confirm execute the `terraform plan` command, 
+    
+    ```bash
+    terraform plan -out main.tfplan
+    ```  
+
+    You should see the following messages:
+
+    ```text
+    No changes. Your infrastructure matches the configuration.
+
+    Terraform has compared your real infrastructure against your configuration and found no differences, so no changes are needed.
+    ```
+
+## Task 4 - Use input variables
 
 In Terraform module parameters are referred to as `input variables` or simply `variables`, in this part of the workshop you'll create input variables for the storage account name and location.  You'll also learn how to use the variables in your deployment.
 
@@ -211,70 +281,114 @@ In Terraform module parameters are referred to as `input variables` or simply `v
 
 For starters, we will only add input variables for the resource group name, storage account name and location of the storage account.
 
-1. Add the following code to the top of the main.tf file:
+1. Add variables for resource group name, storage account name, and location.
 
-```text
-variable "resourceGroupName" {
-    type = string
-    nullable = false
-    default = "{YOUR RESOURCE GROUP NAME}"
-}
+    Add the following code to the top of the main.tf file:
 
-variable "storageAccountName" {
-    type = string
-    nullable = false
-    default = "{YOUR STORAGE ACCOUNT NAME}"
-}
+    ```text
+    variable "resourceGroupName" {
+        type = string
+        nullable = false
+        default = "{YOUR RESOURCE GROUP NAME}"
+    }
 
-variable "location" {
-    type = string
-    nullable = false
-    default = "{YOUR RESOURCE GROUP LOCATION}"
-}
-```
+    variable "storageAccountName" {
+        type = string
+        nullable = false
+        default = "{YOUR STORAGE ACCOUNT NAME}"
+    }
 
-2. Next, use the variables to populate the storage account values, in Terraform input values are referenced using the `var` object. Your storage account resource block should now look like this:
+    variable "location" {
+        type = string
+        nullable = false
+        default = "{YOUR RESOURCE GROUP LOCATION}"
+    }
+    ```
 
-```text
-resource "azurerm_storage_account" "cm_stg_acct" {
-  name                     = var.storageAccountName
-  resource_group_name      = var.resourceGroupName
-  location                 = var.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-}
-```
-3. Execute the `terraform plan` command again, since there were no infrastructure changes you should see this message again:
+1. Leverage the variables with `var.<variablename>` in the `main.tf` file
 
-```text
-No changes. Your infrastructure matches the configuration.
+    Use the variables to populate the storage account values. Terraform references input values using the `var` object. Modify the storage account resource block should to use the variables created above as follows:
 
-Terraform has compared your real infrastructure against your configuration and found no differences, so no changes are needed.
-```
+    ```text
+    resource "azurerm_storage_account" "iac_stg_acct" {
+      name                     = var.storageAccountName
+      resource_group_name      = var.resourceGroupName
+      location                 = var.location
+      account_tier             = "Standard"
+      account_replication_type = "LRS"
+    }
+    ```  
+
+    !["the current main.tf with variables in place"](images/Part1-terraform/image0009-variables1.png)  
+
+1. Validate everything is still the same on the plan and state
+
+    Execute the `terraform plan` command again, since there were no infrastructure changes you should see this message again:
+
+    ```text
+    No changes. Your infrastructure matches the configuration.
+
+    Terraform has compared your real infrastructure against your configuration and found no differences, so no changes are needed.
+    ```
 
 ### Step 2 - Create a variables file
 
-In the previous step we added the ability to use input variables (or parameters) in the terraform template, in this step we will continue with the best practices mentioned above and we will move those variable definitions to a separate file.
+In the previous step you added the ability to use input variables (or parameters) in the terraform template, in this step you will continue with the best practices mentioned above by moving those variable definitions to a separate file.
 
-1. Add a variables.tf file to your working directory, please note that this is just a suggested name and that as long as the file is in the same directory Terraform will automatically make those variables available in the main module.
+1. Create a `variables.tf` file for variables
 
-2. Move the variable declarations from the main.tf to the variables.tf file, after the change, the only thing left in the main.tf file should be your resource block.
+    Add a new file `variables.tf` to your working directory
+    
+    ```bash
+    touch variables.tf
+    ```  
 
-### Step 3 - Deploy via variables file
+    >**please note:** this filename is just a suggested name and that as long as a file is in the same directory, Terraform will automatically make those variables available in the main module.  
 
-Execute the `terraform plan` command again, since we are not updating the infrastructure you should again see no changes in the plan.
+1. Put the variables into the `variables.tf` file
 
-### Step 4 - Deploy without default values
+    Cut the variables from the `main.tf` file and paste the variable declarations from the to the `variables.tf` file, after the change, the only thing left in the `main.tf` file should once again be your resource block.
 
-You might have noticed that so far you haven't been asked to provide a value for the variables, that is because of the default values that we have assigned. Lets test a deployment without default values:
+    !["Variables are in their own file shown side-by-side with main"](images/Part1-terraform/image0010-variablesandmain.png)  
+
+
+### Step 3 - Validate No changes with variables file in place
+
+Validate there are still no changes even with the new file structure
+
+1. Execute the `terraform plan` command again
+
+    Since nothing has changed to update the infrastructure you should again see no changes in the plan.
+
+### Step 4 - Deployments without default/provided values
+
+You might have noticed that so far you haven't been asked to provide a value for the variables during deployment. This is because of the default values that have been put in place in the files. 
+
+In this step, you'll see what happens if you try to do a deployment without default/provided values.
 
 1. Remove the default value for the resourceGroupName variable.
 
-2. Execute the `terraform plan` command, you should see this prompt:
+    In the `variables.tf` file, delete the line `default = "{YOUR RESOURCE GROUP NAME}"`, but leave everything else in place.
 
-!["Terraform variable prompt."](images/Part1-terraform/terraformvarprompt.png)
+    !["no default value for resource group in variables file"](images/Part1-terraform/image0011-removedefaultrgname.png)  
 
-This is obviously not the most efficient deployment strategy and is also error prone, we will look at a better deployment option in the next step.
+2. Execute the `terraform plan` command
+
+    With the change, run the plan again:
+    
+    ```bash
+    terraform plan -out main.tfplan
+    ```  
+    
+    you should see this prompt:
+
+    !["Terraform variable prompt."](images/Part1-terraform/terraformvarprompt.png)
+
+    This is obviously not the most efficient deployment strategy and is also error prone, we will look at a better deployment option in the next step.
+
+    Enter your resource group name to save the plan.  
+
+    !["no changes when the same name is entered"](images/Part1-terraform/image0012-groupnochanges.png)  
 
 ### Step 5 - Use a variable definitions file
 

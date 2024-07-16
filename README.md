@@ -19,7 +19,16 @@ You will need the following prerequisites to complete this walkthrough:
 - A GitHub Account (or other source control provider like ADO/BitBucket, but we're focusing on GitHub) [GitHub](https://github.com/signup?).
 - An Azure Subscription (you can use a free trial if you don't have one).
 - Azure CLI [latest version, minimum 2.50+](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
-- Terraform [version 1.6.6](https://developer.hashicorp.com/terraform/install?product_intent=terraform)
+- Terraform [version 1.6.6+](https://developer.hashicorp.com/terraform/install?product_intent=terraform)
+    - Windows: 
+        ```text  
+        choco install terraform
+        ```  
+    - Mac:  
+        ```text  
+        brew tap hashicorp/tap 
+        brew install hashicorp/tap/terraform
+        ```  
 - GIT (required) with optional GIT command line tools [GIT](https://git-scm.com/downloads)
     - Could use a client like GitKraken or the tools in VSCode and/or Visual Studio
 - Optional: Visual Studio Community or better (or JetBrains Rider) to be able to run the ASP.NET Core Web application locally (this could be optional - you could likely do this with VS Code as well). The code is complete and the extra pieces can be uncommented when the time is right, so you don't actually need to run the app locally if you don't want to. [Visual Studio Downloads](https://visualstudio.microsoft.com/downloads/)  
