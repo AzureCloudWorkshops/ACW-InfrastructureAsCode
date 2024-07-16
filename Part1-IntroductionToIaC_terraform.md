@@ -528,97 +528,230 @@ In this module you will learn to use local variables and functions to create a u
 
 ### Step 1 - Add a unique identifier input variable to the storage account
 
-Since the storage account name needs to be unique across all resources in Azure we will now add a unique identifier section to the storage account name to comply with this requirement.
+Since the storage account name needs to be unique across all resources in Azure you will now add a unique identifier section to the storage account name to comply with this requirement.
 
 1. Add a `uniqueIdentifier` variable to your variables file.
 
-2. Assign a value in the tfvars file with the following format: YYYYMMDDabc.
+    In the `variables.tf` file, add a new variable as follows:
 
-### Step 2 - Add a local variable for the storage account name
+    ```text
+    variable "uniqueIdentifier" {
+        type = string
+        nullable = false
+        default = "20291231acw"
+    }
+    ```  
 
-Local variables in Terraform are declared using a `locals` block, add a locals block at the top of the main.tf file and add a variable called `storageAccountNameFull`. Assign a value by concatenating the storageAccountName and uniqueIdentifier variables using interpolation:
+1. Add the value in the `terraform.tfvars` file.
 
-```text
-locals {
-  storageAccountNameFull = "${var.storageAccountName}${var.uniqueIdentifier}"
-}
-```
+    Based on the value you used earlier, add the variable in the `terraform.tfvars` file with the following format: YYYYMMDDabc.  However, for this exercise you want a second storage account so change the date by one day to make it unique from the other storage account.
 
-Add another storage account resource block by copying the existing one and replacing the `name` parameter with the local variable you just created, the following syntax is used to access local variables:
+    For example, if the value was `20291231acw` for the first one, creat the second one as follows:  
 
-```text
-local.{YOUR VARIABLE NAME}
-```
+    ```text
+    uniqueIdentifier: 20291230acw
+    ```  
 
-Your new storage account block should look like this:
+1. Repeat the previous two steps to create the base storage account name as a varaiable.
 
-```text
-resource "azurerm_storage_account" "cm_stg_acct_full" {
-  name                     = local.storageAccountNameFull
-  resource_group_name      = data.azurerm_resource_group.data_rg.name
-  location                 = data.azurerm_resource_group.data_rg.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-}
-```
+    In the `variables.tf` file, add the following code:
 
-Execute the `terraform plan` command again, you should see a message saying that 1 resource will be added.
+    ```text
+    variable "storageAccountBase" { 
+        type = string 
+        nullable = false 
+        default = "iacstgacct" 
+    } 
+    ``` 
 
-Execute the `terraform apply` command, once it is completed you should see the new storage account in your resource group.
+    Then add the value to the `terraform.tfvars` file:
+
+    ```text
+    storageAccountBase = "iacstgacct"  
+    ```  
+
+### Step 2 - Add a local variable for the full storage account name
+
+Local variables in Terraform are declared using a `locals` block. In this step, you'll add a local variable for the full name of the storage account.  
+
+1. Add a locals block to your `main.tf` file
+
+    At the top of the `main.tf` file, add a variable called `storageAccountNameFull`. Assign a value by concatenating the `storageAccountName` and `uniqueIdentifier` variables using interpolation:
+
+    ```text
+    locals {
+        storageAccountNameFull = "${var.storageAccountBase}${var.uniqueIdentifier}"
+    }
+    ```
+
+1. Define the second storage account
+
+    Add another storage account resource block by copying the existing one and replacing the `name` parameter with the local variable you just created, the following syntax is used to access local variables:
+
+    ```text
+    local.{YOUR VARIABLE NAME}
+    ```  
+
+    So the overall block should be similar to this (Note the resource declaration uses `iac_stg_acct_full` here as well):
+
+    ```text
+    resource "azurerm_storage_account" "iac_stg_acct_full" { 
+      name                     = local.storageAccountNameFull
+      resource_group_name      = data.azurerm_resource_group.data_rg.name
+      location                 = data.azurerm_resource_group.data_rg.location
+      account_tier             = "Standard" 
+      account_replication_type = "LRS" 
+    }
+    ```  
+
+1. Execute the plan to validate you will be creating a new storage account
+
+  Execute the `terraform plan` command again, you should see a message saying that 1 resource will be added.
+
+  ```text
+  terraform plan -out main.tfplan
+  ```  
+
+1. Execute the apply command to create the storage account
+
+  Execute the `terraform apply` command
+
+  ```text
+  terraform apply main.tfplan
+  ```  
+
+  Once the command is completed you should see the new storage account in your resource group. 
+
+  !["Two storage accounts"](images/Part1-terraform/image0015-twostorageaccounts.png)   
 
 ### Step 3 - Use a provider to add a unique string to the storage account name
 
-If you completed the Bicep section of this workshop, you will recall that the `uniquestring` function allows you to generate a string that can help make resource names unique. In this step, you will use a provider to access similar functionality in Terraform. 
+If you completed the Bicep section of this workshop, you will recall that the `uniquestring` function allows you to generate a string that can help make resource names unique. 
 
-1. Add the following after the azurerm element in the providers.tf file:
+In this step, you will use a provider to access create a unique variable string in Terraform. 
 
-```text
-random = {
-  source = "hashicorp/random"
-  version = "3.6.2"
-}
-```
-2. Generate a unique id in main.tf file by adding the following block to your main.tf file:
+1. Create a random object
 
-```text
-resource "random_string" "random" {
-  length           = 10
-  special          = false
-  lower            = true
-  upper            = false 
-}
-```
->**Note:** The name for storage accounts does not allow any special characters so we are forcing the generated string to comply to this. You can check the [documentation](https://registry.terraform.io/providers/hashicorp/random/latest/docs) for the random provider for additional configuration options. 
+    Add the following after the `azurerm` element in the `required providers` portion of the `providers.tf` file:
 
-3. Add a new local variable called `storageAccountNameUnique` and assign the following value:
+    ```text
+    random = {
+      source = "hashicorp/random"
+      version = "3.6.2"
+    }
+    ```  
 
-```text
-storageAccountNameUnique = "${var.storageAccountName}${var.uniqueIdentifier}${random_string.random.result}"
-```
-4. Add a new storage account resource block and assign the name using the new variable created.
+    >**Reminder:** if at any point you get lost, don't forget to check the solution files for help in locating where something should go 
 
-5. Since we added a provider to our deployment, we need to run the `terraform init` command before we can create a new plan, otherwise you'll see the following message:
+1. Modify the `main.tf` file to generate a unique string
 
-!["Terraform provider error."](images/Part1-terraform/providererror.png)
+    Generate a unique id by adding the following block to your `main.tf` file:
 
-6. Deploy the new resource by executing the `plan` and `apply` command, you should see 2 resources being created in the plan: one for the uniqueid and one for the new storage account.
+    ```text
+    resource "random_string" "random" {
+      length           = 10
+      special          = false
+      lower            = true
+      upper            = false 
+    }
+    ```  
 
-Your deployment should fail due to the length of the new storage account name being over 24 characters, in the next step we will use one of the built-in functions in Terraform to solve the problem.
+    >**Note:** The name for storage accounts does not allow any special characters so we are forcing the generated string to comply to this. You can check the [documentation](https://registry.terraform.io/providers/hashicorp/random/latest/docs) for the random provider for additional configuration options. 
+
+1. Add a new local variable called `storageAccountNameUnique` 
+
+    In the `main.tf` file, in the `locals` block, under the current `storageAccountNameFull`, add a new local variable `storageAccountNameUnique`, and assign the following value:
+
+    ```text  
+    storageAccountNameUnique = "${var.storageAccountName}${var.uniqueIdentifier}${random_string.random.result}"
+    ```  
+
+1. Create the resource for a third storage account. 
+
+    Add a new storage account resource block and assign the name using the new variable created.  Use the new local variable for the storage account name.
+
+    ```text
+    resource "azurerm_storage_account" "iac_stg_acct_unique" { 
+      name                     = local.storageAccountNameUnique
+      resource_group_name      = data.azurerm_resource_group.data_rg.name
+      location                 = data.azurerm_resource_group.data_rg.location
+      account_tier             = "Standard" 
+      account_replication_type = "LRS" 
+    }
+    ```  
+
+1.  Re-initialize Terraform with the `terraform init` command
+
+    Since we added a provider to our deployment, we need to run the `terraform init` command before we can create a new plan, otherwise you'll see the following message:
+
+    !["Terraform provider error."](images/Part1-terraform/providererror.png)  
+
+    Make sure all your files are saved, then run the command:
+
+    ```bash
+    terraform init
+    ```  
+
+1.  Deploy using the `plan` and `apply` commands.
+
+    Deploy the new resource by executing the `plan` and `apply` command, you should see 2 resources being created in the plan: one for the uniqueid and one for the new storage account.
+
+    ```bash
+    terraform plan -out main.tfplan
+    terraform apploy main.tfplan
+    ```  
+
+    >**Important:** - **This deployment will fail (and that's expected)**  
+
+    Your deployment should fail due to the length of the new storage account name being over 24 characters, in the next step we will use one of the built-in functions in Terraform to solve the problem.  
+
+    !["The deployment fails because the name is too long"](images/Part1-terraform/image0016-failplan.png)  
 
 ### Step 4 - Use a function to truncate the resource name
 
-Terraform has multiple built-in functions that can be used to transform and combine values, you can find a full list here: https://developer.hashicorp.com/terraform/language/functions. In our case, we will use the `substr` function:
+Terraform has multiple built-in functions that can be used to transform and combine values, you can find a full list here: https://developer.hashicorp.com/terraform/language/functions. 
 
-```text
-substr(string, offset, length)
-```
-1. Use the `substr` function to ensure the value of the `storageAccountNameFullUnique` variable is only 24 characters.
+In this step, you will use the `substr` function to truncate the length of the storage account name:
 
-2. Execute the deployment again, you should see the new storage account in the Azure portal.
+1. Leverage the `substr` function
+
+  The substring function has the following format:
+
+  ```text
+  substr(string, offset, length)
+  ```   
+
+
+1. Use the `substr` function to ensure the value of the `storageAccountNameFullUnique` variable is a maximum of 24 characters.
+
+    Change the declaration in the `locals` section of `main.tf` to the following for the `storageAccountNameUnique`:
+
+    ```text
+    storageAccountNameUnique = substr("${var.storageAccountName}${var.uniqueIdentifier}${random_string.random.id}",0,24)
+    ```  
+
+1. Run the `plan` and `apply` commands again as above.
+
+    Run the commands:
+
+    ```bash
+    terraform plan -out main.tfplan
+    terraform apploy main.tfplan
+    ```  
+
+    This time, you should see your storage account created as expected in the portal:
+
+    !["Random string works to generate teh new file"](images/Part1-terraform/image0017-randomstring.png)  
 
 ### Step 5 - Use a validator to ensure the storage account name is unique and long enough
 
-Input variables allow your Terraform files to be dynamic but without any validations there is also the risk that the values provided will result in invalid properties for your resources. Terraform provides different ways to validate your configuration, in this step we will add validations to a couple input variables to prevent any issues with planning and / or deployment. Variable validations are added using the `validation` property of a variable, for example:
+Input variables allow your Terraform files to be dynamic but without any validations there is also the risk that the values provided will result in invalid properties for your resources.  For this reason, Terraform provides different ways to validate your configuration. 
+
+In this step, you will add validations to a couple of input variables to prevent any issues with planning and/or deployment.  
+
+Variable validations are added using the `validation` property of a variable. 
+
+For example:  
 
 ```text
 variable "image_id" {
@@ -632,29 +765,58 @@ variable "image_id" {
 }
 ```
 
-1. Add the following validation block to the `storageAccountName` variable:
+1. Validate the `storageAccountName` variable
 
-```text
-validation {
-  condition = length(var.storageAccountName) > 3
-  error_message = "The storage account name should be at least 3 characters"
-}
-```
+    Add the following validation block to the `storageAccountName` variable in the `variables.tf` file:
 
-2. Assign the value `c` to the storageAccountName variable in the `terraform.tfvars` file.
+    ```text
+    validation {
+      condition = length(var.storageAccountName) > 3
+      error_message = "The storage account name should be at least 3 characters"
+    }
+    ```  
 
-3. Execute the `plan` command, you should see the following message:
+    For a resulting block of:
 
-!["storageAccountName validation error."](images/Part1-terraform/validationfailure.png)
+    ```text
+    variable "storageAccountName" { 
+        type = string 
+        nullable = false 
+        default = "iacstgacct20291231acw" 
 
-If time permits, add 2 more validations:
+        validation {
+          condition = length(var.storageAccountName) > 3
+          error_message = "The storage account name should be at least 3 characters"
+        }
+    }  
+    ```  
 
-- Validate that the uniqueidentifier variable is 11 characters long.
-- Add an `environment` input variable that will allow only 2 values (hint: look at the [contains](https://developer.hashicorp.com/terraform/language/functions/contains) function): `dev` and `prod` and use that to create a new storage account resource.
+1.  Prove that the validation is working as expected. 
+
+    In the `terraform.tfvars` file, assign the value `c` to the `storageAccountName` variable.
+
+    Try to execute the plan.
+
+    ```bash
+    terraform plan -out main.tfplan
+    ```  
+    
+    You should see the following message:
+
+    !["storageAccountName validation error."](images/Part1-terraform/validationfailure.png)
+
+1. If time permits, add 2 more validations:
+
+    - Validate that the `uniqueIdentifier` variable is `11` characters long.
+    - Add an `environment` input variable that will allow only two (2) values (hint: look at the [contains](https://developer.hashicorp.com/terraform/language/functions/contains) function): `dev` and `prod` and use that to create a new storage account resource.
+
+    >**Reminder:** You can also review the solution files for additional help.
 
 ### Completion Check
 
-You can now deploy the same file to different resource groups multiple times and it will create a unique storage account name per group (and per environment if needed) using local variables, built-in functions and validations. If time permits, you can try creating a different resource group and use what we have built so far to deploy these resources there.
+You can now deploy the same file to different resource groups multiple times and it will create a unique storage account name per resource group (and per environment if needed) using local variables, built-in functions and validations.  
+
+If time permits, you can try creating a different resource group and use what you have built so far to deploy these resources there.  
 
 ## Task 7 - Use modules and outputs
 
