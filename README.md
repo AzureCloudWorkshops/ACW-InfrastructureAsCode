@@ -9,18 +9,24 @@ In each module, you'll build a piece of the overall architecture, and you will l
 
 ## Prerequisites
 
-You will need the following prerequisites to complete this walkthrough:
+Please make sure you have your machine set up and you have completed all of the prerequisites prior to our workshop start time.  If you have any questions or need help, please reach out for help prior to the day of the workshop.
 
-- Visual Studio Code [v 1.85+](https://code.visualstudio.com/download) 
-    - Bicep Extension
-    - Terraform Extension
-    - Azure Tools Extension
-    - Optional: C# Extension
-- A GitHub Account (or other source control provider like ADO/BitBucket, but we're focusing on GitHub) [GitHub](https://github.com/signup?).
+### Software, tools, Github, and Azure Subscription  
+
+You will need the following prerequisites to complete this walkthrough.  Please make sure you have them on your machine:
+
+- Visual Studio Code [v 1.91+](https://code.visualstudio.com/download) 
+    - Bicep Extension [for bicep workshop]
+    - Terraform Extension [for terraform workshop]
+    - Azure Tools Extension [both paths]
+    - Optional: C# Extension 
+- A GitHub Account (or other source control provider like ADO/BitBucket, but we're focusing on GitHub) [GitHub](https://github.com/signup?).  If you choose any other provider you will need to solve problems on your own as the walkthrough will only show interactions with GitHub.
 - An Azure Subscription (you can use a free trial if you don't have one).
-- Azure CLI [latest version, minimum 2.50+](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
+    >**IMPORTANT**: Please do not use a work subscription or an email associated with your work.  This walkthrough will create resources in Azure and you should not use a work subscription for this training.  If you don't have a personal subscription, you can create a free trial subscription [here](https://azure.microsoft.com/en-us/free/).  Make sure that if you create a free subscription you use a personal email address like hotmail, outlook, gmail, etc.  Do not use a work email address.
+- Azure CLI [latest version, minimum 2.62+](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
 - Terraform [version 1.6.6+](https://developer.hashicorp.com/terraform/install?product_intent=terraform)
-    - Windows: 
+    - Windows [use Chocolatey](https://chocolatey.org/install)   
+
         ```text  
         choco install terraform
         ```  
@@ -37,9 +43,11 @@ You will need the following prerequisites to complete this walkthrough:
 - Optional: SSMS (SQL Server Management Studio) installed on your machine [SSMS](https://learn.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-ver16).  
 - Optional: - Basic Programming knowledge (ASP.Net MVC with C# is used in this walkthrough, but all the code changes are given to you so you don't really need to know how to develop solutions).
 
-### Get the starter project into your GitHub repository
+### Get the starter project repository into your GitHub Account
 
-You will need a GitHub repository to store the code and this will be used to set up CI/CD to Azure via GitHub Actions.  If you want to use another repository like Azure DevOps, BitBucket, or GitLab, you can do that as well, but the instructions in this walkthrough will only show how to create GitHub actions for the IaC and CI/CD deployments.
+You will need a GitHub repository to store the code and that repository will be used to set up CI/CD to Azure via GitHub Actions.  
+
+>**Note:** If you want to use another repository like Azure DevOps, BitBucket, or GitLab, you can do that as well, but the instructions in this walkthrough and our focus in the live workshop will only show how to create GitHub actions for the IaC and CI/CD deployments.
 
 If you get stuck, refer to the GitHub documents for:
 - [How to create a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-new-repository)  
@@ -84,89 +92,164 @@ You should now have a local repository with the code in place, and a remote repo
 Before proceeding, ensure that you can answer yes to the following questions:
 - Do you have a remote repository with the code in place?
 - Do you have a local repository with the code in place?
-- Does the application run on your local machine and work as expected to register a user and perform CRUD operations around contacts?
+- [Optional] Does the application run on your local machine and work as expected to register a user and perform CRUD operations around contacts?
 
-## Step 1: Introduction to IaC
+### Ensure that you can work with your Azure subscription from your machine
 
-The first module gives you an introduction to IaC.  You'll learn about how to work with Bicep or Terraform to create a simple resource group and storage account.  You'll also learn about things like:
+In order to make sure we get to the important parts of the workshop, we don't have time to spend on getting subscriptions set up and getting connected to our Azure account from our local machine.
 
-- parameters
-- variables
-- outputs
-- modules
-- scopes
+For the first part of the workshop, commands will be run from the local machine into Azure.  In the second part of the workshop, we will use GitHub Actions to deploy the application to Azure.  For this reason, you need to make sure that you can work with your Azure subscription from your local machine, as well as have your GitHub account and repository set up and ready to go.
 
-Complete the introductory module then choose one or both of the submodules for Bicep and/or Terraform to learn about IaC and how to work with Bicep or Terraform.  
+Please make sure that you have completed the following steps with your user account and Azure subscription prior to the workshop to ensure that you are ready to start working with Bicep or Terraform at the start of the day:
 
-- [Part 1 - Introduction to IaC](Part1-IntroductionToIaC.md)
+#### Task 1: Get Logged in to Azure from the CLI
 
-## Completion Check
+In this first task, you will log in to Azure from the CLI.  This will allow you to run commands against your subscription.  You will need to have an Azure subscription to complete this task.  If you don't have an Azure subscription, you can create a free account [here](https://azure.microsoft.com/en-us/free/).  You will also need to make sure you have the Azure CLI installed.  You can find instructions on how to install the Azure CLI [here](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli).
 
-Before moving on, ensure that you have a full understanding of how to create a deployment using Bicep or Terraform.  You should be able to answer the following questions:
-- How do you work with parameters and variables?
-- Which type can be passed in from the command line/template file?
-- What is the purpose of outputs?
-- What is the purpose of modules? How do you utilize a module?
-- What is the purpose of scopes?  When would you use a scope? When would a scope be implicit?
+To get started, you will need to have a terminal open to run the azure cli.  You can do this in Visual Studio Code terminal for Bash or PowerShell, or really any other terminal as long as you can run commands (even the windows command line should work).
 
-## Step 2: Build the infrastructure
+##### Step 1 - Ensure Azure CLI  
 
-In this step you will build the IaC that will provision the entire environment for the application.
+Begin by making sure you can run the Azure CLI.  
 
-Complete the introductory module then choose one or both of the submodules for Bicep and/or Terraform to learn about IaC and how to work with Bicep or Terraform.  
+1. Execute the following command to validate Azure CLI is installed:
 
-- [Part 2 - Building the Infrastructure](Part2-BuildingTheInfrastructure.md)
+    ```bash
+    az --version
+    ```  
+    >**Note:** if you do not see a current version of the Azure CLI as shown below, you will not be able to complete the next part of this task from your local machine.
 
-### Overall Architecture
+    !["Checking the Azure CLI version in both PowerShell and Bash"](images/Part1-common/image0001-azversion.png)
 
-It will be helpful to remember the overall architecture for build order and dependencies. This diagram can be used to visualize the final solution.
+##### Step 2 - Log in to Azure
 
-!["Overall Architecture"](/images/ContactWeb.drawio.png)  
+After validating the CLI is installed, make sure to continue on your local machine by logging in to Azure.
 
-### Completion Check
+1. Log In to Azure
 
-The following resources are needed to complete this walkthrough:
-- Resource Group
-- Log Analytics Workspace
-- Application Insights
-- App Service Plan
-- App Service
-- Azure SQL Server
-- Key Vault
+    Enter the following command to log in to Azure:
+    ```bash  
+    az login
+    ```  
 
-## Step 3: Build CI/CD to deploy the application
+    !["Logging into Azure"](images/Part1-common/image0002-azlogin.png)  
 
-In this step you will build out the CI/CD pipeline to deploy the application to Azure.  You will use GitHub Actions to build the pipeline (or another pipeline/action from another source control provider).  This part will be the same regardless of which architecture you choose to use for the IaC. 
+1. A browser window will open, enter login credentials or select an account that you are already logged in to.
 
-- [Part 3 - Implementing the CI/CD](Part3-ImplementingCICD.md)
+    !["Selecting an account in the browser"](images/Part1-common/image0003-azloginselectyouraccount.png)  
 
-### Completion Check
+1. A confirmation window will appear.
 
-At the end of this step, you have a working deployment for any code changes, which deploy the application to your Azure environment.
+    !["Login confirmation"](images/Part1-common/image0004-azloginconfirmationdialog.png)  
 
-## Step 4: Azure App Configuration
+>**Note:** If you are having trouble getting logged in from your local machine, you can use the Azure Cloud Shell to complete the work in this training.  You can find instructions on how to use the Azure Cloud Shell [here](https://docs.microsoft.com/en-us/azure/cloud-shell/overview).  You will need to use the shell and run the commands as shown in these walkthroughs, but you will need to also ensure you have the files for your deployments created in the shell as well if you go this route.  Using the azure cloud shell will not be shown in the walkthroughs, so if you go this route you will need to figure out how to create the files in the shell and run the commands as shown in the walkthroughs.
 
-If there is enough remaining time, adding the Azure App Configuration to share resources is a great way to continue to learn.  This step will only require additional changes to existing deployments, so there is no common step, just pick the one that you want to work with and complete the activity
+##### Step 3 - Ensure your subscription
 
-Complete one of the following: 
+Before doing any local deployments, it is a very good practice to make sure you are deploying to the correct subscription.  
 
-- [Part 4 - Azure App Configuration - Bicep](Part4-AzureAppConfiguration_bicep.md)  
+1. Determine what subscription you are currently set to execute against.
 
-- or - 
+    ```bash
+    az account show
+    ```  
 
-- [Part 4 - Azure App Configuration - Terraform](Part4-AzureAppConfiguration_terraform.md)  
+    !["Making sure you are on the correct subscription with the az account show command"](images/Part1-common/image0005-azaccountshowoutput.png) 
 
-### Completion Check
+    Review the output and determine that you are on the correct subscription.  You can see the name of the subscription and the subscription id.  Either can be used to set your subscription. 
 
-At the end of this step, you have added Azure App Configuration and reconfigured the code to leverage the configuration instead of the KeyVault.  
+    If you are on the correct subscription, you can continue to the next task.
 
-In addition to the resources in part 2, you should have the following resources:
-- Azure App Configuration
+1. If you need to change your subscription, you can do so by running the following commands:
 
-## Conclusion
+    ```bash
+    az account list -o table
+    ```  
 
-In this walkthrough, you learned how to work with IaC using Bicep and/or Terraform.  You then learned how to automate the deployment of your IaC pipeline to ensure your architecture is built consistently at Azure.
+    !["Listing the subscriptions with the az account list command"](images/Part1-common/image0006-azaccountlistoutput.png)  
 
-You completed the circle by learning how to build a CI/CD pipeline to deploy the application to Azure.  
+    Then, using the subscription id or name, run the following command:
 
-You should now feel confident that you have the understanding and skills to build out IaC and CI/CD pipelines for your own applications.
+    ```bash
+    az account set --subscription <either-the-subscription-id or-name-goes-here>
+    ```  
+
+    !["Setting the subscription with the az account set command"](images/Part1-common/image0007-azaccountsetandazaccountshow.png)
+
+    Run the `az account show` command again to ensure you are on the correct subscription.
+
+    Ensure you are on the correct subscription before continuing.
+
+#### Task 2 - Create a resource group
+
+In this second task, you'll use the Azure CLI to create a resource group.  You'll need to have an Azure subscription and you'll need to be logged in to Azure from the CLI.  If you haven't completed the first task above, please do so before continuing.  
+
+You can create a resource group in the portal or via command line commands with the azure CLI. If you are struggling with the CLI, just pivot and go create a resource group in the portal (or switch to run the commands in the Azure Cloud Shell rather than from your local machine).
+
+Assuming that creating a resource group is straight forward in the portal, let's do it via the CLI for the purposes of learning and validating our local machine connectivity to Azure.
+
+##### Step 1 - Create variables
+
+To create a resource group, you will need to set the name and location for the group. You should choose a region that is close to you that also has redundancy to match your needs.  For this walkthrough, any region will suffice, so choose one that is close to you.  You can find a list of regions [here](https://azure.microsoft.com/en-us/global-infrastructure/regions/).  
+
+The name of the resource group should also make sense for the scope of your work.  For this, you are doing a simple deployment, so you can name it something like `iac-training-rg`.  You can name it whatever you want, but make sure it makes sense for the scope of your work and that you'll be confident you could delete the group later without fear of losing your work.
+
+>**Note**: You may wish to create a script and run that instead of just running the command directly from the command line.  Either way, just make sure you can run commands and create resources in the correct Azure subscription.
+
+1. Set variables to manage your group name and your location of choice (use either bash or powershell, not both):
+
+    Bash:  
+
+    ```bash
+    rg=iac-training-rg
+    loc=eastus
+    echo $rg
+    echo $loc
+    ```  
+
+    !["Setting the variables for the resource group name and location"](images/Part1-common/image0008-rgandlocvariables-bash.png)
+
+    PowerShell:  
+
+    ```PowerShell
+    $rg="iac-training-rg"
+    $loc="eastus"
+    echo $rg
+    echo $loc
+    ```  
+
+    !["Setting the variables for the resource group name and location"](images/Part1-common/image0008-rgandlocvariables-powershell.png)
+
+##### Step 2 - Create the resource group
+
+With the variables in place, you can create and validate the existence of the resource group.
+
+1. Create the group
+
+    >**Note:** Only bash is shown below but the same `az` cli commands work in PowerShell.
+
+    ```bash  
+    az group create -n $rg -l $loc
+    ```  
+
+1. Validate the group exists via the CLI:
+
+    !["Creating the resource group with the az group create command"](images/Part1-common/image0009-azgroupcreate.png)  
+
+    ```bash
+    az group exists -n $rg
+    ```  
+
+    !["Validating the resource group exists with the az group exists command"](images/Part1-common/image0010-azgroupexists.png)
+
+1. You can also validate in the portal
+
+    !["Validating the resource group exists in the portal"](images/Part1-common/image0011-azgroupexistsinportal.png)
+
+>**Note**: The name of your resource group will be whatever you name it, so don't be alarmed if you named it something different than what is shown or used any other region than `eastus`, as there are no restrictions on the name or location of the resource group for this walkthrough and any region with a resource group of any name will work.
+
+## You are now ready
+
+With the above prerequisites completed, you are now ready to start the workshop.  You will be able to run commands from your local machine to Azure, and you will be able to create resources in Azure.  You will also have a repository in GitHub that you can use in the later parts of the workshop to set up CI/CD to Azure via GitHub Actions.
+
+Please proceed to the [Part 1 - Introduction to IaC](Part1-IntroductionToIaC.md) walkthrough to begin the workshop.  Note that there will usually be a common walkthrough and then a breakout walkthrough for either bicep or terraform.  You can choose to do one or both, but you only need to do one to complete the training.
